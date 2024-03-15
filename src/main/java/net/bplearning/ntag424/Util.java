@@ -76,4 +76,37 @@ public final class Util {
 		}
 		return result;
 	}
+
+	public final static boolean[] xor(boolean[] a1, boolean[]a2) {
+		return null; // FIXME
+	}
+
+	public final static byte[] toByteArray(boolean[] ary) {
+		return null; // FIXME
+	}
+
+	public final static boolean[] toBitArray(byte[] ary) {
+		return null; // FIXME
+	}
+
+	public final static boolean[] shiftLeft(boolean[] ary, int shifts) {
+		return null; // FIXME
+	}
+
+	public final static boolean[] msb(boolean[] ary, int offsetFromMSB) {
+		return null; // FIXME
+	}
+
+	public final static byte[] padMessageToBlocksize(byte[] message, int blocksize) {
+		int remainder = message.length % blocksize;
+		int complete_blocks = message.length / blocksize;
+		if(remainder == 0) {
+			return message;
+		}
+	
+		byte[] result = new byte[(complete_blocks + 1)*blocksize];
+		System.arraycopy(message, 0, result, 0, message.length);
+		result[message.length] = (byte)0x80;
+		return result;
+	}
 }

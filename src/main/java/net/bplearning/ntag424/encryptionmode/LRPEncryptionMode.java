@@ -19,5 +19,9 @@ public class LRPEncryptionMode implements EncryptionMode {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("Unimplemented method 'generateMac'");
 	}
+
+	public void restartSession() {
+		// FIXME - implement authenticateLRPNonFirst
+	}
 	
 }

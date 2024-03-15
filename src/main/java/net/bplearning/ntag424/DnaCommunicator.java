@@ -3,6 +3,7 @@ package net.bplearning.ntag424;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import net.bplearning.ntag424.command.IsoSelectFile;
 import net.bplearning.ntag424.encryptionmode.EncryptionMode;
 import net.bplearning.ntag424.exception.MACValidationException;
 import net.bplearning.ntag424.exception.ProtocolException;
@@ -19,12 +20,21 @@ public class DnaCommunicator {
 	protected int commandCounter;
 	protected Consumer<String> log = (val) -> {};
 
-	protected byte[] transceive(byte[] bytesToSend) {
+	public byte[] transceive(byte[] bytesToSend) {
 		return transceiver.apply(bytesToSend);
 	}
 
 	public byte[] getActiveTransactionIdentifier() {
 		return activeTransactionIdentifier;
+	}
+
+	public int getCommandCounter() { return commandCounter; }
+
+	/**
+	 * Begin a session.  Call this immediately after creating, before authenticating.  I think this is undocumented, but required.
+	 */
+	public void beginCommunication() {
+		IsoSelectFile.run(this, IsoSelectFile.SELECT_MODE_CHILD_DF, Constants.DF_FILE_ID);
 	}
 
 	// **** SESSION MANAGEMENT **** //
