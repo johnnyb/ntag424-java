@@ -78,7 +78,11 @@ public final class Util {
 	}
 
 	public final static boolean[] xor(boolean[] a1, boolean[]a2) {
-		return null; // FIXME
+		boolean[] result = new boolean[a1.length];
+		for(int i = 0; i < result.length; i++) {
+			result[i] = a1[i] ^ a2[i];
+		}
+		return result;
 	}
 
 	public final static byte[] toByteArray(boolean[] ary) {
@@ -93,8 +97,16 @@ public final class Util {
 		return null; // FIXME
 	}
 
-	public final static boolean[] msb(boolean[] ary, int offsetFromMSB) {
-		return null; // FIXME
+	public final static boolean[] msb(boolean[] ary, int bits) {
+		boolean[] newAry = new boolean[bits];
+		System.arraycopy(ary, 0, newAry, 0, bits);
+		return newAry;
+	}
+
+	public final static boolean[] lsb(boolean[] ary, int bits) {
+		boolean[] newAry = new boolean[bits];
+		System.arraycopy(ary, ary.length - bits, newAry, 0, bits);
+		return newAry;
 	}
 
 	public final static byte[] padMessageToBlocksize(byte[] message, int blocksize) {
