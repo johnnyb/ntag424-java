@@ -75,14 +75,45 @@ public class AESEncryptionMode implements EncryptionMode {
 
 	@Override
 	public byte[] decryptData(byte[] message) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'decryptData'");
+        byte[] transactionIdentifier = communicator.getActiveTransactionIdentifier();
+        int commandCounter = communicator.getCommandCounter();
+        byte[] ivinput = new byte[] {
+            0x5a,
+            (byte)0xa5,
+            transactionIdentifier[0],
+            transactionIdentifier[1],
+            transactionIdentifier[2],
+            transactionIdentifier[3],
+            Util.getByte(commandCounter, 0), // LSB-first (pg. 23)
+            Util.getByte(commandCounter, 1),
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        };
+
+        try {
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, sessionEncryptionKey, Constants.zeroIVPS);
+            byte[] ivdata = cipher.doFinal(ivinput);
+            cipher.init(Cipher.DECRYPT_MODE, sessionEncryptionKey, new IvParameterSpec(ivdata));
+            return cipher.doFinal(message);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+            // Should not occur
+            e.printStackTrace();
+            return null;
+        }
 	}
 
 	@Override
 	public byte[] generateMac(byte[] message) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'generateMac'");
+        try {
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, sessionMacKey, Constants.zeroIVPS);
+            CMAC mac = new CMAC(cipher, sessionMacKey);
+            return mac.performEvensOnly(message, 16);
+        } catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
+            // Should not occur
+            e.printStackTrace();
+            return null;
+        }
 	}
 
     public boolean authenticateEV2(DnaCommunicator communicator, int keyNum, byte[] keyData) throws ProtocolException {

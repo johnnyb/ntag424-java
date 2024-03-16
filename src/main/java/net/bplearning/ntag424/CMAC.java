@@ -155,7 +155,7 @@ public class CMAC {
 
     // NOTE - documentation not clear if this is supposed to be evens (zero-indexed) or evens (one-indexed)
     //      - AN12196 pg. 21 indicates that it is one-indexed evens
-    byte[] performEvensOnly(byte[] message, int lengthBytes) {
+    public byte[] performEvensOnly(byte[] message, int lengthBytes) {
         byte[] result = perform(message, lengthBytes);
         byte[] evens = new byte[result.length / 2];
         for(int idx = 0; idx < evens.length; idx++) {
