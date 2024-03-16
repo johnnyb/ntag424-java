@@ -1,5 +1,6 @@
 package net.bplearning.ntag424;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -9,19 +10,38 @@ import net.bplearning.ntag424.exception.MACValidationException;
 import net.bplearning.ntag424.exception.ProtocolException;
 
 public class DnaCommunicator {
-	public DnaCommunicator(Function<byte[], byte[]> newTransceiver) { 
-		transceiver = newTransceiver;
+	public interface ThrowableFunction <T, R, E extends Throwable> {
+		public R apply(T input) throws E;
 	}
 
-	protected Function<byte[], byte[]> transceiver;
+	protected ThrowableFunction<byte[], byte[], IOException> transceiver;
 	protected EncryptionMode encryptionMode;
 	protected byte[] activeTransactionIdentifier;
 	protected int activeKeyNumber;
 	protected int commandCounter;
-	protected Consumer<String> log = (val) -> {};
+	protected Consumer<String> logger = (val) -> {}; // Default to an empty logger
 
-	public byte[] transceive(byte[] bytesToSend) {
-		return transceiver.apply(bytesToSend);
+	public void log(String value) {
+		logger.accept(value);
+	}
+
+	public void log(String tag, byte[] data) {
+		log(tag + ": " + Util.byteToHex(data));
+	}
+
+	public void setLogger(Consumer<String> newLoggerFunction) {
+		logger = newLoggerFunction;
+	}
+
+	public void setTransceiver(ThrowableFunction<byte[], byte[], IOException> newTransceiver) {
+		transceiver = newTransceiver;
+	}
+
+	public byte[] transceive(byte[] bytesToSend) throws IOException{
+		log("BytesSending", bytesToSend);
+		byte[] results = transceiver.apply(bytesToSend);
+		log("BytesReceived", results);
+		return results;
 	}
 
 	public byte[] getActiveTransactionIdentifier() {
@@ -33,7 +53,8 @@ public class DnaCommunicator {
 	/**
 	 * Begin a session.  Call this immediately after creating, before authenticating.  I think this is undocumented, but required.
 	 */
-	public void beginCommunication() {
+	public void beginCommunication() throws IOException {
+		log("Beginning communication");
 		IsoSelectFile.run(this, IsoSelectFile.SELECT_MODE_CHILD_DF, Constants.DF_FILE_ID);
 	}
 
@@ -61,7 +82,7 @@ public class DnaCommunicator {
 	 * Runs a basic framed NXP native command.
 	 * Does not affect the command counter.
 	 */
-	public CommandResult nxpNativeCommand(byte cmd, byte[] hdr, byte[] data, byte[] macData) {
+	public CommandResult nxpNativeCommand(byte cmd, byte[] hdr, byte[] data, byte[] macData) throws IOException {
 		byte[] command = new byte[] {
 			(byte)0x90,
 			(byte)cmd,
@@ -89,7 +110,7 @@ public class DnaCommunicator {
 	 * @param data
 	 * @return
 	 */
-	public CommandResult nxpPlainCommand(byte cmd, byte[] hdr, byte[] data) {
+	public CommandResult nxpPlainCommand(byte cmd, byte[] hdr, byte[] data) throws IOException {
 		commandCounter += 1;
 		return nxpNativeCommand(cmd, hdr, data, null);
 	}
@@ -102,7 +123,7 @@ public class DnaCommunicator {
 	 * @return
 	 * @throws ProtocolException
 	 */
-	public CommandResult nxpMacCommand(byte cmd, byte[] hdr, byte[] data) throws ProtocolException {
+	public CommandResult nxpMacCommand(byte cmd, byte[] hdr, byte[] data) throws IOException, ProtocolException {
         // PREPARE MAC DATA
 		byte[] cipherBase = new byte[] {
             cmd,
@@ -159,7 +180,7 @@ public class DnaCommunicator {
 	 * @return
 	 * @throws ProtocolException
 	 */
-	public CommandResult nxpEncryptedCommand(byte cmd, byte[] hdr, byte[] data) throws ProtocolException {
+	public CommandResult nxpEncryptedCommand(byte cmd, byte[] hdr, byte[] data) throws IOException, ProtocolException {
 		byte[] encryptedData;
 		if(data == null || data.length == 0) {
 			encryptedData = data;
@@ -186,7 +207,7 @@ public class DnaCommunicator {
 	 * @return
 	 * @throws ProtocolException
 	 */
-	public CommandResult nxpSwitchedCommand(CommunicationMode mode, byte cmd, byte[] hdr, byte[] data) throws ProtocolException {
+	public CommandResult nxpSwitchedCommand(CommunicationMode mode, byte cmd, byte[] hdr, byte[] data) throws IOException, ProtocolException {
 		switch(mode) {
 			case FULL:
 				return nxpEncryptedCommand(cmd, hdr, data);

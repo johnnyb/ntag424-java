@@ -7,6 +7,7 @@ public final class Util {
 	public final static byte getByte(int value, int byteNumber) {
 		while(byteNumber > 0) {
 			value = value >> 8;
+			byteNumber--;
 		}
 		return (byte) value;
 	}
@@ -120,5 +121,14 @@ public final class Util {
 		System.arraycopy(message, 0, result, 0, message.length);
 		result[message.length] = (byte)0x80;
 		return result;
+	}
+
+	public static String byteToHex(byte[] data) {
+		if(data == null) { return null; }
+		StringBuilder sb = new StringBuilder();
+		for(byte b: data) {
+			sb.append(String.format("%02X", b));
+		}
+		return sb.toString();
 	}
 }

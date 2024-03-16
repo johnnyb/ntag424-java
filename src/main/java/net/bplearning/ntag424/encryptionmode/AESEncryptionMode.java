@@ -1,5 +1,6 @@
 package net.bplearning.ntag424.encryptionmode;
 
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
@@ -116,7 +117,7 @@ public class AESEncryptionMode implements EncryptionMode {
         }
 	}
 
-    public boolean authenticateEV2(DnaCommunicator communicator, int keyNum, byte[] keyData) throws ProtocolException {
+    public boolean authenticateEV2(DnaCommunicator communicator, int keyNum, byte[] keyData) throws IOException, ProtocolException {
         // STAGE 1 Authentication (pg. 46)
         CommandResult e_k_b = communicator.nxpNativeCommand(
 			(byte)0x71,

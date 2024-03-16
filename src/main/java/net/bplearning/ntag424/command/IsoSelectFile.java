@@ -1,5 +1,7 @@
 package net.bplearning.ntag424.command;
 
+import java.io.IOException;
+
 import net.bplearning.ntag424.DnaCommunicator;
 import net.bplearning.ntag424.Util;
 
@@ -10,7 +12,7 @@ public class IsoSelectFile implements Command {
 	public static final byte SELECT_MODE_PARENT_DF = 0x03;
 	public static final byte SELECT_MODE_NAME = 0x04;
 
-	public static void run(DnaCommunicator communicator, byte mode, int fileid) {
+	public static void run(DnaCommunicator communicator, byte mode, int fileid) throws IOException {
 		byte[] bytes = new byte[] {
 			0x00, // class
 			(byte)0xa4, // ISOSelectFile
