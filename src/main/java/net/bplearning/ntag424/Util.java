@@ -87,15 +87,61 @@ public final class Util {
 	}
 
 	public final static byte[] toByteArray(boolean[] ary) {
-		return null; // FIXME
+		byte[] newAry = new byte[ary.length / 8];
+		int bitOffset = 0;
+		for(int idx = 0; idx < newAry.length; idx++) {
+			int b = 0x00;
+			for(int bitIdx = 0; bitIdx < 8; bitIdx++) {
+				if(ary[bitOffset]) {
+					b = b | (1 << (7 - bitIdx));
+				}
+				bitOffset++;
+			}
+			newAry[idx] = (byte)b;
+		}
+		return newAry;
 	}
 
 	public final static boolean[] toBitArray(byte[] ary) {
-		return null; // FIXME
+		boolean[] bits = new boolean[ary.length * 8];
+
+		int bitOffset = 0;
+		for(int idx = 0; idx < ary.length; idx++) {
+			int b = ary[idx];
+			int comparator = 0b10000000;
+			for(int bitIdx = 0; bitIdx < 8; bitIdx++) {
+				int result = b & comparator;
+				bits[bitOffset] = result != 0;
+				comparator = comparator >> 1;
+				bitOffset++;
+			}
+		}
+	
+		return bits;
 	}
 
 	public final static boolean[] shiftLeft(boolean[] ary, int shifts) {
-		return null; // FIXME
+		boolean[] newArray = new boolean[ary.length];
+		System.arraycopy(ary, shifts, newArray, 0, ary.length - shifts);
+		return newArray;
+	}
+
+	public final static boolean[] shiftRight(boolean[] ary, int shifts) {
+		boolean[] newArray = new boolean[ary.length];
+		System.arraycopy(ary, 0, newArray, shifts, ary.length - shifts);
+		return newArray;
+	}
+
+	public final static boolean[] rotateRight(boolean[] ary, int shifts) {
+		boolean[] newArray = shiftRight(ary, shifts);
+		System.arraycopy(ary, ary.length - shifts, newArray, 0, shifts);
+		return newArray;
+	}
+
+	public final static boolean[] rotateLeft(boolean[] ary, int shifts) {
+		boolean[] newArray = shiftLeft(ary, shifts);
+		System.arraycopy(ary, 0, newArray, ary.length - shifts, shifts);
+		return newArray;
 	}
 
 	public final static boolean[] msb(boolean[] ary, int bits) {
