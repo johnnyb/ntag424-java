@@ -55,7 +55,7 @@ public class DnaCommunicator {
 	 */
 	public void beginCommunication() throws IOException {
 		log("Beginning communication");
-		IsoSelectFile.run(this, IsoSelectFile.SELECT_MODE_CHILD_DF, Constants.DF_FILE_ID);
+		IsoSelectFile.run(this, IsoSelectFile.SELECT_MODE_BY_FILE_IDENTIFIER, Constants.DF_FILE_ID);
 	}
 
 	// **** SESSION MANAGEMENT **** //
@@ -78,29 +78,45 @@ public class DnaCommunicator {
 	
 	// **** BASIC COMMAND ARCHITECTURE **** //
 
+	public static byte LENGTH_ALL = 0x00;
+
+	/**
+	 * Runs a standard ISO/IEC7816-4 communication frame
+	 * @param instructionClass
+	 * @param instruction
+	 * @param param1
+	 * @param param2
+	 * @param data
+	 * @param expectedResponseLength
+	 * @return
+	 * @throws IOException
+	 */
+	public CommandResult isoCommand(byte instructionClass, byte instruction, byte param1, byte param2, byte[] data, byte expectedResponseLength) throws IOException {
+		byte[] command = Util.combineByteArrays(
+			new byte[] {
+				instructionClass,
+				instruction,
+				param1,
+				param2,
+				(byte)(data == null ? 0 : data.length)
+			},
+			data,
+			new byte[] {
+				expectedResponseLength
+			}
+		);
+
+		byte[] results = transceive(command);
+
+		return new CommandResult(results);
+	}
+
 	/**
 	 * Runs a basic framed NXP native command.
 	 * Does not affect the command counter.
 	 */
 	public CommandResult nxpNativeCommand(byte cmd, byte[] hdr, byte[] data, byte[] macData) throws IOException {
-		byte[] command = new byte[] {
-			(byte)0x90,
-			(byte)cmd,
-			(byte)0x00,
-			(byte)0x00,
-			(byte)(hdr.length + data.length + macData.length)
-		};
-
-		command = Util.combineByteArrays(
-			command, 
-			hdr,
-			data,
-			macData,
-			new byte[]{0x00}
-		);
-
-		byte[] results = transceive(command);
-		return new CommandResult(results);
+		return isoCommand((byte)0x90, cmd, (byte)0x00, (byte)0x00, macData, LENGTH_ALL);
     }
 
 	/**
