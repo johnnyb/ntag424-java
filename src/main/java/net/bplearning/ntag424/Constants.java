@@ -22,4 +22,6 @@ public class Constants {
 	public static int PICC_FILE_ID = 0xe3f00;
 	public static int DF_FILE_ID = 0xe110;
 	public static byte[] DF_NAME = new byte[]{(byte)0xd2, 0x76, 0x00, 0x00, (byte)0x85, 0x01, 0x01};
+
+	public static byte[] FACTORY_KEY = new byte[16];
 }

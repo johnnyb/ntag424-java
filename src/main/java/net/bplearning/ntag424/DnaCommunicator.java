@@ -116,7 +116,7 @@ public class DnaCommunicator {
 	 * Does not affect the command counter.
 	 */
 	public CommandResult nxpNativeCommand(byte cmd, byte[] hdr, byte[] data, byte[] macData) throws IOException {
-		return isoCommand((byte)0x90, cmd, (byte)0x00, (byte)0x00, macData, LENGTH_ALL);
+		return isoCommand((byte)0x90, cmd, (byte)0x00, (byte)0x00, Util.combineByteArrays(hdr, data, macData), LENGTH_ALL);
     }
 
 	/**
@@ -161,13 +161,13 @@ public class DnaCommunicator {
         commandCounter += 1;
 
         // IF NO MAC, JUST RETURN
-        int sz = data.length;
+        int sz = result.data.length;
         if(sz < 8) {
 			return new CommandResult(new byte[0], result.status1, result.status2);
         }
 
-        byte[] dataBytes = Util.subArrayOf(data, 0, sz - 8);
-        byte[] macBytes = Util.subArrayOf(data, sz - 8, 8);
+        byte[] dataBytes = Util.subArrayOf(result.data, 0, sz - 8);
+        byte[] macBytes = Util.subArrayOf(result.data, sz - 8, 8);
 
         // Validate MAC result
 		byte[] resultMacInputHeader = new byte[] {
@@ -196,7 +196,7 @@ public class DnaCommunicator {
 	 * @return
 	 * @throws ProtocolException
 	 */
-	public CommandResult nxpEncryptedCommand(byte cmd, byte[] hdr, byte[] data) throws IOException, ProtocolException {
+	public CommandResult nxpEncryptedCommand(byte cmd, byte[] hdr, byte[] data) throws IOException {
 		byte[] encryptedData;
 		if(data == null || data.length == 0) {
 			encryptedData = data;
@@ -221,9 +221,9 @@ public class DnaCommunicator {
 	 * @param hdr
 	 * @param data
 	 * @return
-	 * @throws ProtocolException
+	 * @throws IOException
 	 */
-	public CommandResult nxpSwitchedCommand(CommunicationMode mode, byte cmd, byte[] hdr, byte[] data) throws IOException, ProtocolException {
+	public CommandResult nxpSwitchedCommand(CommunicationMode mode, byte cmd, byte[] hdr, byte[] data) throws IOException {
 		switch(mode) {
 			case FULL:
 				return nxpEncryptedCommand(cmd, hdr, data);

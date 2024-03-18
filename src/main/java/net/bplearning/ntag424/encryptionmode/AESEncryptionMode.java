@@ -117,7 +117,7 @@ public class AESEncryptionMode implements EncryptionMode {
         }
 	}
 
-    public boolean authenticateEV2(DnaCommunicator communicator, int keyNum, byte[] keyData) throws IOException, ProtocolException {
+    public static boolean authenticateEV2(DnaCommunicator communicator, int keyNum, byte[] keyData) throws IOException, ProtocolException {
         // STAGE 1 Authentication (pg. 46)
         CommandResult e_k_b = communicator.nxpNativeCommand(
 			(byte)0x71,

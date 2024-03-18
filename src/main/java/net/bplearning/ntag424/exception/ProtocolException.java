@@ -1,6 +1,8 @@
 package net.bplearning.ntag424.exception;
 
-public class ProtocolException extends Exception {
+import java.io.IOException;
+
+public class ProtocolException extends IOException {
 	public ProtocolException(String msg) {
 		super(msg);
 	}

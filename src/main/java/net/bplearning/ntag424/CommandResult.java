@@ -1,5 +1,10 @@
 package net.bplearning.ntag424;
 
+import java.io.IOError;
+import java.io.IOException;
+
+import net.bplearning.ntag424.exception.ProtocolException;
+
 public class CommandResult {
 	public byte[] data;
 	public byte status1;
@@ -22,6 +27,12 @@ public class CommandResult {
 		return 
 			(status1 == PLAIN_OK || status1 == MAC_OK) 
 			&& (status2 == SUCCESS || status2 == ADDITIONAL_FRAME_EXPECTED);
+	}
+
+	public void throwUnlessSuccessful() throws IOException {
+		if(!isSuccessStatus()) {
+			throw new ProtocolException("Invalid status result: " + Util.byteToHex(new byte[]{status1, status2}));
+		}
 	}
 
 	// pgs 44-45
