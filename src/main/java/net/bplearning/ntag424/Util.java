@@ -2,9 +2,10 @@ package net.bplearning.ntag424;
 
 import java.security.SecureRandom;
 import java.util.Random;
+import java.util.zip.CRC32;
 
 public final class Util {
-	public final static byte getByte(int value, int byteNumber) {
+	public final static byte getByte(long value, int byteNumber) {
 		while(byteNumber > 0) {
 			value = value >> 8;
 			byteNumber--;
@@ -74,6 +75,14 @@ public final class Util {
 		for(int i = 0; i < val.length; i++) {
 			int newIdx = i >= (val.length - rotations) ? (i - val.length + rotations) : (i + rotations);
 			result[newIdx] = val[i];
+		}
+		return result;
+	}
+
+	public final static byte[] xor(byte[] a1, byte[] a2) {
+		byte[] result = new byte[a1.length];
+		for(int i = 0; i < result.length; i++) {
+			result[i] = (byte)(a1[i] ^ a2[i]);
 		}
 		return result;
 	}
@@ -176,5 +185,61 @@ public final class Util {
 			sb.append(String.format("%02X", b));
 		}
 		return sb.toString();
+	}
+
+	public static boolean getBitLSB(byte b, int bit) {
+		return (b & (1 << bit)) != 0;
+	}
+	
+	public static byte leftNibble(byte b) {
+		return (byte)(b & 0xf);
+	}
+
+	public static byte rightNibble(byte b) {
+		return (byte)(b >> 4);
+	}
+
+	public static int lsbBytesToInt(byte[] data) {
+		int multiplier = 1;
+		int value = 0;
+		for(byte b: data) {
+			value += b * multiplier;
+			multiplier *= 256;
+		}
+		return value;
+	} 
+
+	public static byte lsbBitValue(int bitIdx) {
+		return lsbBitValue(bitIdx, true);
+	}
+
+	public static byte lsbBitValue(int bitIdx, boolean isSet) {
+		if(!isSet) {
+			return 0;
+		}
+
+		return (byte)(1 << bitIdx);
+	}
+
+	public static byte[] jamCrc32(byte[] value) {
+		CRC32 crc = new CRC32();
+    	crc.update(value);
+    long result = crc.getValue();
+    byte[] basicCRC = new byte[] {
+		Util.getByte(result, 0),
+		Util.getByte(result, 1),
+		Util.getByte(result, 2),
+		Util.getByte(result, 3)
+	};
+    byte[] jamCRC = xor(
+        basicCRC,
+		new byte[] {
+			(byte) 0xff,
+			(byte) 0xff,
+			(byte) 0xff,
+			(byte) 0xff,
+		}
+    );
+    return jamCRC;
 	}
 }

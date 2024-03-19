@@ -48,6 +48,10 @@ public class DnaCommunicator {
 		return activeTransactionIdentifier;
 	}
 
+	public int getActiveKeyNumber() {
+		return activeKeyNumber;
+	}
+
 	public int getCommandCounter() { return commandCounter; }
 
 	/**
