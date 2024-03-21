@@ -13,11 +13,11 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import net.bplearning.ntag424.CMAC;
 import net.bplearning.ntag424.CommandResult;
 import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.DnaCommunicator;
 import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.aes.AESCMAC;
 import net.bplearning.ntag424.exception.DelayException;
 import net.bplearning.ntag424.exception.EncryptionException;
 import net.bplearning.ntag424.exception.ProtocolException;
@@ -108,8 +108,8 @@ public class AESEncryptionMode implements EncryptionMode {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, sessionMacKey, Constants.zeroIVPS);
-            CMAC mac = new CMAC(cipher, sessionMacKey);
-            return mac.performEvensOnly(message, 16);
+            AESCMAC mac = new AESCMAC(cipher, sessionMacKey);
+            return Util.CMACEvensOnly(mac, message, BLOCKSIZE_BYTES);
         } catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
             // Should not occur
             e.printStackTrace();
@@ -225,7 +225,7 @@ public class AESEncryptionMode implements EncryptionMode {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, key, Constants.zeroIVPS);
             byte[] sv = generateAESSessionVector(purpose);
-            CMAC cmac = new CMAC(cipher, key);
+            AESCMAC cmac = new AESCMAC(cipher, key);
             byte[] keyData = cmac.perform(sv, 16);
     
             return new SecretKeySpec(keyData, "AES");

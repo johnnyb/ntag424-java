@@ -1,8 +1,19 @@
 package net.bplearning.ntag424;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.zip.CRC32;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 public final class Util {
 	public final static byte getByte(long value, int byteNumber) {
@@ -242,4 +253,105 @@ public final class Util {
     );
     return jamCRC;
 	}
+
+
+	public static byte[] simpleAesEncrypt(byte[] key, byte[] data) {
+		try {
+			Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+			SecretKeySpec secretKey = new SecretKeySpec(key, "AES"); 
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey, Constants.zeroIVPS);
+			return cipher.doFinal(data);
+		} catch(NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
+			// Should not happen
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static byte[] simpleAesDecrypt(byte[] key, byte[] data) {
+		try {
+			Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+			SecretKeySpec secretKey = new SecretKeySpec(key, "AES"); 
+			cipher.init(Cipher.DECRYPT_MODE, secretKey, Constants.zeroIVPS);
+			return cipher.doFinal(data);	
+		} catch(NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
+			// Should not happen
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	// NOTE - documentation not clear if this is supposed to be evens (zero-indexed) or evens (one-indexed)
+    //      - AN12196 pg. 21 indicates that it is one-indexed evens
+	public static byte[] CMACEvensOnly(CMAC cmac, byte[] message, int lengthBytes) {
+        byte[] result = cmac.perform(message, lengthBytes);
+        byte[] evens = new byte[result.length / 2];
+        for(int idx = 0; idx < evens.length; idx++) {
+            evens[idx] = result[idx * 2 + 1];
+        }
+        return evens;
+    }
+
+	public static byte[] diversifyKey(CMAC cmac, byte[] applicationInfo, byte[] identifier) {
+		byte[] data = Util.combineByteArrays(new byte[]{0x01}, identifier, applicationInfo);
+        return cmac.perform(data, 16);
+	}
+
+	/**
+	 * Converts an array of bytes to an array of nibbles.
+	 * The result is an int array simply for convenience,
+	 * both in implementation and in usage of results.
+	 * @param bytes
+	 * @return
+	 */
+	public static int[] bytesToNibbles(byte[] bytes) {
+		int[] results = new int[bytes.length];
+		for(int i = 0; i < bytes.length; i++) {
+			int bval = bytes[i];
+			bval = bval & 0xff;
+			int rightNibble = bval & 0xf;
+			int leftNibble = bval >> 4;
+			results[i * 2] = leftNibble;
+			results[i * 2 + 1] = rightNibble;
+		}
+		return results;
+	}
+
+	public static List<boolean[]> groupBlocks(boolean[] data, int groupSize) {
+        int fullGroups = data.length / groupSize;
+		List<boolean[]> newData = new LinkedList<>();
+		for(int grpIdx = 0; grpIdx < fullGroups; grpIdx++) {
+			boolean[] group = new boolean[groupSize];
+			for(int idx = 0; idx < groupSize; idx++) {
+				group[idx] = data[grpIdx * groupSize + idx];
+			}
+			newData.add(group);
+		}
+        
+        int remaining = data.length % groupSize;
+        if(remaining > 0) {
+            int startIdx = fullGroups * groupSize;
+            boolean[] group = new boolean[remaining];
+            for(int idx = 0; idx < remaining; idx++) {
+                group[idx] = data[startIdx];
+                startIdx += 1;
+            }
+            newData.add(group);
+        }
+
+        return newData;
+    }
+
+
+    public static boolean[] padblock(boolean[] ary, int length) {
+        boolean[] paddedBlock = new boolean[length];
+        for(int idx = 0; idx < paddedBlock.length; idx++) {
+            if(idx < ary.length) {
+                paddedBlock[idx] = ary[idx];
+            } else {
+                paddedBlock[idx] = idx == ary.length; // puts in a 1 for first digit padding, and 0 for the remaining
+            }
+        }
+        return paddedBlock;
+    }
 }
