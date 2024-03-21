@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.crypto.Cipher;
+
 import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.Util;
 
@@ -11,12 +13,13 @@ public class LRPCipher {
 	LRPMultiCipher multiCipher;
 	byte[] key;
 	int counter = 0;
-	int counterSize = 8;
+	Integer counterSize = 8; // NOTE - the standard says that the counter size is variable, but testing says that it expects it to be fixed at 8 nibbles long
 	LRPCMAC mac;
 
 	public LRPCipher(LRPMultiCipher multiCipher, byte[] key) {
 		this.multiCipher = multiCipher;
 		this.key = key;
+		mac = new LRPCMAC(this);
 	}
 	
 	/**
@@ -31,8 +34,14 @@ public class LRPCipher {
         int ctr = counter;
 
         while(true) {
-			if(nibbles.size() == counterSize) {
-				break;
+			if(counterSize == null) { // No fixed counter size - stop when no bytes left
+				if(ctr == 0) {
+					break;
+				}
+			} else {
+				if(nibbles.size() == counterSize) { // fixed counter size - stop when we reach the size
+					break;
+				}	
 			}
 
 			int low = ctr & mask;
@@ -64,7 +73,7 @@ public class LRPCipher {
         return y;
 	}
 
-	byte[] cryptFullBlocks(byte[] src, boolean isEncrypting) {
+	public byte[] cryptFullBlocks(byte[] src, int cryptMode) {
 		// Algorithm 4 (pg. 7)
 
         if((src.length % Constants.blockSize) != 0) {
@@ -79,7 +88,7 @@ public class LRPCipher {
             byte[] y = evalLRP(x, true);
             byte[] block = Util.subArrayOf(src, blockStart, Constants.blockSize);
             byte[] resultBlock = 
-				isEncrypting 
+				cryptMode == Cipher.ENCRYPT_MODE 
 					? Util.simpleAesEncrypt(y, block) 
 					: Util.simpleAesDecrypt(y, block);
 			System.arraycopy(result, blockStart, resultBlock, 0, resultBlock.length);
@@ -99,15 +108,23 @@ public class LRPCipher {
         } else {
             newSrc[src.length] = (byte)0x80;
         }
-        return cryptFullBlocks(newSrc, true);
+        return cryptFullBlocks(newSrc, Cipher.ENCRYPT_MODE);
 	}
 
 	public byte[] decrypt(byte[] src) {
-		byte[] result = cryptFullBlocks(src, false);
+		byte[] result = cryptFullBlocks(src, Cipher.DECRYPT_MODE);
 		int lastIdx = result.length - 1;
 		while(result[lastIdx] != Constants.marker) {
 			lastIdx--;
 		}
 		return Util.subArrayOf(result, 0, lastIdx);
+	}
+
+	public void setCounterSize(Integer sz) {
+		counterSize = sz;
+	}
+
+	public byte[] cmac(byte[] message) {
+		return mac.perform(message, 16);
 	}
 }
