@@ -77,8 +77,9 @@ public class LRPEncryptionMode implements EncryptionMode {
 		   null
 	   );
 	   result.throwUnlessSuccessful();
-
+	   
 	   if(result.data[0] != 0x01) {
+		communicator.log("Bad initial byte: " + result.data[0]);
 		   return false; // Bad data
 	   }
 

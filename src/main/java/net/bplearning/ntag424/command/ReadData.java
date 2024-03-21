@@ -8,12 +8,12 @@ import net.bplearning.ntag424.DnaCommunicator;
 import net.bplearning.ntag424.Util;
 
 public class ReadData implements Command {
-	public byte[] run(DnaCommunicator communicator, int fileNum, int offset, int length) throws IOException {
+	public static byte[] run(DnaCommunicator communicator, int fileNum, int offset, int length) throws IOException {
 		FileSettings settings = GetFileSettings.run(communicator, fileNum);
 		return run(communicator, settings.commMode, fileNum, offset, length);
 	}
 
-	public byte[] run(DnaCommunicator communicator, CommunicationMode mode, int fileNum, int offset, int length) throws IOException {
+	public static byte[] run(DnaCommunicator communicator, CommunicationMode mode, int fileNum, int offset, int length) throws IOException {
 			CommandResult result = communicator.nxpSwitchedCommand(
 				mode,
 				(byte)0xad,

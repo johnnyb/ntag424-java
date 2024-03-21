@@ -12,7 +12,7 @@ public class Constants {
 	public static int blockSize = 16;
 	public static int nibbleSize = 4;
 
-	public static boolean[] RB_128; {
+	public static boolean[] RB_128; static {
 		RB_128 = new boolean[128];
 		RB_128[120] = true;
 		RB_128[125] = true;
@@ -20,7 +20,7 @@ public class Constants {
 		RB_128[127] = true;
 	}
 
-	public static boolean[] RB_64; {
+	public static boolean[] RB_64; static {
 		RB_64 = new boolean[64];
 		RB_64[59] = true;
 		RB_64[60] = true;

@@ -305,7 +305,7 @@ public final class Util {
 	 * @return
 	 */
 	public static int[] bytesToNibbles(byte[] bytes) {
-		int[] results = new int[bytes.length];
+		int[] results = new int[bytes.length*2];
 		for(int i = 0; i < bytes.length; i++) {
 			int bval = bytes[i];
 			bval = bval & 0xff;
