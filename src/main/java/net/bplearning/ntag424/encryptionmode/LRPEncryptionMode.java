@@ -41,7 +41,7 @@ public class LRPEncryptionMode implements EncryptionMode {
 		// FIXME - implement authenticateLRPNonFirst
 	}
 
-	byte[] generateLRPSessionKey(LRPMultiCipher multiCipher, byte[] a, byte[] b) {
+	public static byte[] generateLRPSessionKey(LRPMultiCipher multiCipher, byte[] a, byte[] b) {
  // pg. 33 - indexes are reversed, so just subtracting to get the 
  // indexes from the standard
 

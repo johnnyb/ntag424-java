@@ -353,4 +353,39 @@ public final class Util {
         }
         return paddedBlock;
     }
+
+	public static byte[] hexToByte(String val) {
+		val = val.toLowerCase();
+		List<Byte> bytes = new LinkedList<>();
+		byte curByte = 0;
+		boolean hasLeftNibble = false;
+		for(int i = 0; i < val.length(); i++) {
+			int c = val.charAt(i);
+			int curNibble = 0;
+			if(c >= 'a' && c <= 'f') {
+				curNibble = (c - 'a') + 10;
+			} else if (c >= '0' && c <= '9') {
+				curNibble = (c - '0');
+			} else {
+				// Not a hex value
+				continue;
+			}
+
+			if(hasLeftNibble) {
+				curByte = (byte)(curByte | curNibble);
+				bytes.add(curByte);
+				hasLeftNibble = false;
+				curByte = 0;
+			} else {
+				curByte = (byte)(curNibble << 4);
+				hasLeftNibble = true;
+			}
+		}
+
+		byte[] result = new byte[bytes.size()];
+		for(int i = 0; i < result.length; i++) {
+			result[i] = bytes.get(i);
+		}
+		return result;
+	}
 }
