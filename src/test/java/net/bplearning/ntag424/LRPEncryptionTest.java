@@ -1,5 +1,7 @@
 package net.bplearning.ntag424;
 
+import javax.crypto.Cipher;
+
 import org.junit.Test;
 
 import net.bplearning.ntag424.encryptionmode.LRPEncryptionMode;
@@ -18,6 +20,13 @@ public class LRPEncryptionTest {
 			throw new RuntimeException("Unexpected session key: " + Util.byteToHex(sessionKey));
 		}
 		LRPEncryptionMode mode = new LRPEncryptionMode(null, mc, rndA, rndB);
+		byte[] tiEncrypted = Util.hexToByte("FA E1 9D 27 82 38 CA 84 1E 37 EC EB F7 5B 0E 72");
+	   byte[] tiDecrypted = mode.getSessionLrpEncryptionCipher().cryptFullBlocks(tiEncrypted, Cipher.DECRYPT_MODE);
+	   byte[] expectedTiDecrypted = Util.hexToByte("2F 0C F7 91 02 00 00 00 00 00 02 00 00 00 00 00");
+		if(!Util.arraysEqual(tiDecrypted, expectedTiDecrypted)) {
+			throw new RuntimeException("Invalid TI decryption: " + Util.byteToHex(tiDecrypted));
+		}
+
 		byte[] cipherData = Util.hexToByte("51 00 00 2F 0C F7 91");
 		byte[] longMac = mode.generateMac(cipherData);
 		byte[] shortMac = Util.shortenCMAC(longMac);

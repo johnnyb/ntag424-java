@@ -11,6 +11,6 @@ public class GetCardUid implements Command {
 	public static byte[] run(DnaCommunicator communicator) throws IOException {
 		CommandResult result = communicator.nxpEncryptedCommand((byte)0x51, null, null);
 		result.throwUnlessSuccessful();
-		return Util.subArrayOf(result.data, 0, 8);
+		return Util.subArrayOf(result.data, 0, 7);
 	}
 }

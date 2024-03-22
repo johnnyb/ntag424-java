@@ -156,7 +156,6 @@ public class DnaCommunicator {
 		};
 		byte[] cipherData = Util.combineByteArrays(cipherBase, hdr, data);
 
-
         // PERFORM MAC WITH APPROPRIATE ALGORITHM
         byte[] longMacData = encryptionMode.generateMac(cipherData);
 		byte[] macData = Util.shortenCMAC(longMacData);
@@ -216,6 +215,7 @@ public class DnaCommunicator {
 		} else {
 			decryptedResultData = encryptionMode.decryptData(result.data);
 		}
+		log("Decrypted data: " + Util.byteToHex(decryptedResultData));
 
 		return new CommandResult(decryptedResultData, result.status1, result.status2);
     }

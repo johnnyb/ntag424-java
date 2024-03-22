@@ -91,7 +91,7 @@ public class LRPCipher {
 				cryptMode == Cipher.ENCRYPT_MODE 
 					? Util.simpleAesEncrypt(y, block) 
 					: Util.simpleAesDecrypt(y, block);
-			System.arraycopy(result, blockStart, resultBlock, 0, resultBlock.length);
+			System.arraycopy(resultBlock, 0, result, blockStart, resultBlock.length);
 
             counter++;
         }

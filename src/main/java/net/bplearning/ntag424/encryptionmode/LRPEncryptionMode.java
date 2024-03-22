@@ -22,6 +22,10 @@ public class LRPEncryptionMode implements EncryptionMode {
 		sessionLrpEncryptionCipher = sessionMultiCipher.generateCipher(1);
 	}
 
+	public LRPCipher getSessionLrpEncryptionCipher() {
+		return sessionLrpEncryptionCipher;
+	}
+
 	@Override
 	public byte[] encryptData(byte[] message) {
 		return sessionLrpEncryptionCipher.encrypt(message);
