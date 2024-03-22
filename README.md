@@ -16,6 +16,11 @@ If you have suggestions on how to refactor this to support more NFC tags, I'm ce
 
 Note that there is a companion library for reading SUN messages that this chip can generate [here](https://github.com/johnnyb/nfc-sun-decoder).
 
+Other important documents to read:
+
+* Dna 424 Application Notes and hints, [NXP AN12196](https://www.nxp.com/docs/en/application-note/AN12196.pdf)
+* Dna 424 LRP Mode Application Notes and hints, [NXP AN12321](https://www.nxp.com/docs/en/application-note/AN12321.pdf)
+
 ## Building
 
 This library is built with Maven.  To build, just do:
