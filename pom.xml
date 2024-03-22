@@ -11,6 +11,26 @@
   <name>ntag424</name>
   <url>http://www.bplearning.net/</url>
 
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/license/mit</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Jonathan Bartlett</name>
+      <email>jonathan@bartlettpublishing.com</email>
+      <organization>BP Learning</organization>
+      <organizationUrl>http://www.bplearning.net/</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git@github.com/johnnyb/ntag424-java.git</connection>
+    <developerConnection>scm:git:ssh://github.com/johnnyb/ntag424-java.git</developerConnection>
+    <url>https://github.com/johnnyb/ntag424-java</url>
+  </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
