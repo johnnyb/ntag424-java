@@ -158,7 +158,8 @@ public class DnaCommunicator {
 
 
         // PERFORM MAC WITH APPROPRIATE ALGORITHM
-        byte[] macData = encryptionMode.generateMac(cipherData);
+        byte[] longMacData = encryptionMode.generateMac(cipherData);
+		byte[] macData = Util.shortenCMAC(longMacData);
 
         // DO THE COMMAND
         CommandResult result = nxpNativeCommand(cmd, hdr, data, macData);
@@ -184,7 +185,8 @@ public class DnaCommunicator {
 			activeTransactionIdentifier[3]
 		};
 		byte[] resultMacInput = Util.combineByteArrays(resultMacInputHeader, dataBytes);
-        byte[] resultMacData = encryptionMode.generateMac(resultMacInput);
+        byte[] resultLongMacData = encryptionMode.generateMac(resultMacInput);
+        byte[] resultMacData = Util.shortenCMAC(resultLongMacData);
         if(!Util.arraysEqual(resultMacData, macBytes)) {
 			throw new MACValidationException();
         }

@@ -283,14 +283,13 @@ public final class Util {
 
 	// NOTE - documentation not clear if this is supposed to be evens (zero-indexed) or evens (one-indexed)
     //      - AN12196 pg. 21 indicates that it is one-indexed evens
-	public static byte[] CMACEvensOnly(CMAC cmac, byte[] message, int lengthBytes) {
-        byte[] result = cmac.perform(message, lengthBytes);
-        byte[] evens = new byte[result.length / 2];
+	public static byte[] shortenCMAC(byte[] originalCMAC) {
+		byte[] evens = new byte[originalCMAC.length / 2];
         for(int idx = 0; idx < evens.length; idx++) {
-            evens[idx] = result[idx * 2 + 1];
+            evens[idx] = originalCMAC[idx * 2 + 1];
         }
         return evens;
-    }
+	}
 
 	public static byte[] diversifyKey(CMAC cmac, byte[] applicationInfo, byte[] identifier) {
 		byte[] data = Util.combineByteArrays(new byte[]{0x01}, identifier, applicationInfo);

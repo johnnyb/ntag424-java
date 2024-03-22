@@ -7,7 +7,6 @@ import javax.crypto.Cipher;
 import net.bplearning.ntag424.CommandResult;
 import net.bplearning.ntag424.DnaCommunicator;
 import net.bplearning.ntag424.Util;
-import net.bplearning.ntag424.exception.ProtocolException;
 import net.bplearning.ntag424.lrp.LRPCipher;
 import net.bplearning.ntag424.lrp.LRPMultiCipher;
 
@@ -77,7 +76,7 @@ public class LRPEncryptionMode implements EncryptionMode {
 		   null
 	   );
 	   result.throwUnlessSuccessful();
-	   
+
 	   if(result.data[0] != 0x01) {
 		communicator.log("Bad initial byte: " + result.data[0]);
 		   return false; // Bad data

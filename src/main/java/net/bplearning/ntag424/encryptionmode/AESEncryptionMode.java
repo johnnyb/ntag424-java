@@ -109,7 +109,7 @@ public class AESEncryptionMode implements EncryptionMode {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, sessionMacKey, Constants.zeroIVPS);
             AESCMAC mac = new AESCMAC(cipher, sessionMacKey);
-            return Util.CMACEvensOnly(mac, message, BLOCKSIZE_BYTES);
+            return mac.perform(message, BLOCKSIZE_BYTES);
         } catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
             // Should not occur
             e.printStackTrace();
