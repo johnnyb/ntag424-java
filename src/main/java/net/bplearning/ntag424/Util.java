@@ -202,12 +202,12 @@ public final class Util {
 		return (b & (1 << bit)) != 0;
 	}
 	
-	public static byte leftNibble(byte b) {
-		return (byte)(b & 0xf);
+	public static int leftNibble(Byte input) {
+		return (input & 0xF0 ) >> 4;
 	}
-
-	public static byte rightNibble(byte b) {
-		return (byte)(b >> 4);
+	
+	public static int rightNibble(Byte input) {
+		return input & 0x0F;
 	}
 
 	public static int lsbBytesToInt(byte[] data) {

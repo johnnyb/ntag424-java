@@ -62,10 +62,10 @@ public class FileSettings {
 		}
 
 		// Access rights - pg. 11
-		settings.readPerm = Util.leftNibble(data[2]);
-		settings.writePerm = Util.rightNibble(data[2]);
-		settings.readWritePerm = Util.leftNibble(data[3]);
-		settings.changePerm = Util.rightNibble(data[3]);
+		settings.readPerm = Util.leftNibble(data[3]);
+		settings.writePerm = Util.rightNibble(data[3]);
+		settings.readWritePerm = Util.leftNibble(data[2]);
+		settings.changePerm = Util.rightNibble(data[2]);
 
 		settings.fileSize = Util.lsbBytesToInt(Util.subArrayOf(data, 4, 3));
 		int currOffset = 7;
