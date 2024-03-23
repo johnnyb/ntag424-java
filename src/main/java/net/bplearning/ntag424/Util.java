@@ -388,4 +388,50 @@ public final class Util {
 		}
 		return result;
 	}
+
+	/**
+	 * Finds the "search" byte array within the "original" byte array, removes it, 
+	 * and returns the new array and the index at which it was found.
+	 * If the "search" byte array is not found, returns the original byte array and -1.
+	 * @param original
+	 * @param search
+	 * @return
+	 */
+	public static Pair<byte[], Integer> findAndReplaceBytes(byte[] original, byte[] search, byte[] replacement) {
+		int offset = findOffsetOf(original, search);
+		if(offset == -1) {
+			return new Pair<>(original, -1);
+		}
+		byte[] part1 = Util.subArrayOf(original, 0, offset);
+		int idxAfterSearch = offset + search.length;
+		byte[] part2 = Util.subArrayOf(original, idxAfterSearch, original.length - idxAfterSearch);
+		return new Pair<>(combineByteArrays(part1, replacement, part2), offset);
+	}
+
+	public static int findOffsetOf(byte[] original, byte[] search) {
+		if(search.length == 0) {
+			return 0; // Empty search always returns beginning
+		}
+
+		int searchIdx = 0;
+		for(int originalIdx = 0; originalIdx < original.length; originalIdx++) {
+			if(original[originalIdx] == search[searchIdx]) {
+				// Matches next character in sequence
+				searchIdx++;
+				if(searchIdx == search.length) {
+					// Found!  Return original index
+					return searchIdx - search.length;
+				}
+			} else {
+				// Doesn't match next character in sequence
+				searchIdx = 0;
+			}
+		}
+		return -1;
+	}
+
+	public static byte[] generateRepeatingBytes(byte overwriteChar, int dataLength) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'generateRepeatingBytes'");
+	}
 }
