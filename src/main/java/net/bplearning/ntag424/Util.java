@@ -420,7 +420,7 @@ public final class Util {
 				searchIdx++;
 				if(searchIdx == search.length) {
 					// Found!  Return original index
-					return searchIdx - search.length;
+					return originalIdx - (search.length - 1);
 				}
 			} else {
 				// Doesn't match next character in sequence
@@ -430,8 +430,20 @@ public final class Util {
 		return -1;
 	}
 
-	public static byte[] generateRepeatingBytes(byte overwriteChar, int dataLength) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'generateRepeatingBytes'");
+	public static byte[] generateRepeatingBytes(byte val, int dataLength) {
+		byte[] result = new byte[dataLength];
+		for(int i = 0; i < dataLength; i++) {
+			result[i] = val;
+		}
+		return result;
+	}
+
+	public static int roundUpToMultiple(int value, int multiple) {
+		// Make sure we are on even blocks
+		int blocks = value / multiple;
+		if(value % multiple != 0) {
+			blocks++;
+		}
+		return blocks * multiple;			
 	}
 }

@@ -25,35 +25,12 @@ public class NdefTemplateMaster {
 		UID, PICC, MAC, ReadCounter, FileData, MACInputOffset
 	};
 
-	Map<Placeholder, byte[]> getPlaceholderTemplate() {
-		Map<Placeholder, byte[]> ptemps = new HashMap<>();
-		ptemps.put(Placeholder.UID, placeholderUID);
-		ptemps.put(Placeholder.PICC, placeholderPICC);
-		ptemps.put(Placeholder.MAC, placeholderMAC);
-		ptemps.put(Placeholder.ReadCounter, placeholderReadCounter);
-		ptemps.put(Placeholder.FileData, placeholderFileData);
-		ptemps.put(Placeholder.MACInputOffset, placeholderMACInputOffset);
-		return ptemps;
-	}
-
-	Map<Placeholder, Integer> getPlaceholderLengths() {
-		// FIXME - currently fake data
-		Map<Placeholder, Integer> ptemps = new HashMap<>();
-		ptemps.put(Placeholder.UID, 8);
-		ptemps.put(Placeholder.PICC, 8);
-		ptemps.put(Placeholder.MAC, 8);
-		ptemps.put(Placeholder.ReadCounter, 8);
-		ptemps.put(Placeholder.FileData, 8);
-		ptemps.put(Placeholder.MACInputOffset, 8);
-		return ptemps;
-	}
-
 	public NdefTemplate generateNdefTemplateFrom(byte[] recordTemplate, SDMSettings sdmDefaults) {
 		SDMSettings sdmSettings = sdmDefaults.duplicate();
 		byte[] record = recordTemplate;
 
 		Map<Placeholder, byte[]> placeholderTemplates = getPlaceholderTemplate();
-		Map<Placeholder, Integer> placeholderLengths = getPlaceholderLengths();
+		Map<Placeholder, Integer> placeholderLengths = getPlaceholderLengths(sdmSettings);
 		Map<Placeholder, Integer> placeholderOffsets = new HashMap<>();
 
 		for(Placeholder p: Placeholder.values()) {
@@ -74,13 +51,37 @@ public class NdefTemplateMaster {
 			record = searchResult.first;
 		}
 
+		loadPlaceholderOffsets(sdmSettings, placeholderOffsets);		
+
 		NdefTemplate template = new NdefTemplate();
 		template.ndefRecord = record;
-
-		// FIXME - write offsets and lengths
+		template.sdmSettings = sdmSettings;
 
 		return template;
 	} 
+
+	Map<Placeholder, byte[]> getPlaceholderTemplate() {
+		Map<Placeholder, byte[]> ptemps = new HashMap<>();
+		ptemps.put(Placeholder.UID, placeholderUID);
+		ptemps.put(Placeholder.PICC, placeholderPICC);
+		ptemps.put(Placeholder.MAC, placeholderMAC);
+		ptemps.put(Placeholder.ReadCounter, placeholderReadCounter);
+		ptemps.put(Placeholder.FileData, placeholderFileData);
+		ptemps.put(Placeholder.MACInputOffset, placeholderMACInputOffset);
+		return ptemps;
+	}
+
+	Map<Placeholder, Integer> getPlaceholderLengths(SDMSettings settings) {
+		int asciiMultiplier = settings.sdmOptionUseAscii ? 2 : 1;
+		Map<Placeholder, Integer> ptemps = new HashMap<>();
+		ptemps.put(Placeholder.UID, 7 * asciiMultiplier);
+		ptemps.put(Placeholder.PICC, (usesLRP ? 24 : 16) * asciiMultiplier);
+		ptemps.put(Placeholder.MAC, 8 * asciiMultiplier);
+		ptemps.put(Placeholder.ReadCounter, 3 * asciiMultiplier);
+		ptemps.put(Placeholder.FileData, Util.roundUpToMultiple(fileDataLength, 16) * asciiMultiplier);
+		ptemps.put(Placeholder.MACInputOffset, 0);
+		return ptemps;
+	}
 
 	void adjustPlaceholderOffsets(Map<Placeholder, Integer> offsetList, int idx, int removed, int added) {
 		int adjustment = added - removed;
@@ -88,6 +89,44 @@ public class NdefTemplateMaster {
 			int offset = offsetList.get(p);
 			offset += adjustment;
 			offsetList.put(p, offset);
+		}
+	}
+
+	void loadPlaceholderOffsets(SDMSettings sdmSettings, Map<Placeholder, Integer> offsets) {
+		Integer uidOffset = offsets.get(Placeholder.UID);
+		Integer piccOffset = offsets.get(Placeholder.PICC);
+		Integer macOffset = offsets.get(Placeholder.MAC);
+		Integer readCounterOffset = offsets.get(Placeholder.ReadCounter);
+		Integer fileDataOffset = offsets.get(Placeholder.FileData);
+		Integer macInputOffset = offsets.get(Placeholder.MACInputOffset);
+
+		if(uidOffset == null) {
+			sdmSettings.sdmOptionUid = false;
+		} else {
+			sdmSettings.sdmOptionUid = true;
+			sdmSettings.sdmUidOffset = uidOffset;
+		}
+		if(piccOffset != null) {
+			sdmSettings.sdmPiccDataOffset = piccOffset;
+		}
+		if(macOffset != null) {
+			sdmSettings.sdmMacOffset = macOffset;
+		}
+		if(readCounterOffset == null) {
+			sdmSettings.sdmOptionReadCounter = false;
+		} else {
+			sdmSettings.sdmOptionReadCounter = true;
+			sdmSettings.sdmReadCounterOffset = readCounterOffset;
+		}
+		if(fileDataOffset == null) {
+			sdmSettings.sdmOptionEncryptFileData = false;
+		} else {
+			sdmSettings.sdmOptionEncryptFileData = true;
+			sdmSettings.sdmEncOffset = uidOffset;
+			sdmSettings.sdmEncLength = fileDataLength;
+		}
+		if(macInputOffset != null) {
+			sdmSettings.sdmMacInputOffset = macInputOffset;
 		}
 	}
 }
