@@ -3,6 +3,7 @@ package net.bplearning.ntag424.sdm;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.Pair;
 import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.command.FileSettings;
@@ -25,16 +26,35 @@ public class NdefTemplateMaster {
 		UID, PICC, MAC, ReadCounter, FileData, MACInputOffset
 	};
 
-	public NdefTemplate generateNdefTemplateFromUrlString(String urlString, SDMSettings sdmDefaults) {
+	/**
+	 * Generates an NDEF file for the card from a String template and SDMSettings.
+	 * This both *uses* the SDMSettings given *and* modifies it based on the
+	 * template to be sure the proper features are enabled.
+	 * However, it does require that the user properly set
+	 * the SDM permissions first.
+	 * @param urlString
+	 * @param sdmDefaults
+	 * @return
+	 */
+	public byte[] generateNdefTemplateFromUrlString(String urlString, SDMSettings sdmDefaults) {
 		byte[] ndefData = Util.ndefDataForUrlString(urlString);
-		NdefTemplate template = generateNdefTemplateFrom(ndefData, sdmDefaults);
-		template.ndefRecord[1] = (byte)(template.ndefRecord.length - 2); // New record length
-		template.ndefRecord[4] = (byte)(template.ndefRecord.length - 6); // New URL length
-		return template;
+		byte[] ndefRecord = generateNdefTemplateFrom(ndefData, sdmDefaults);
+		ndefRecord[1] = (byte)(ndefRecord.length - 2); // New record length
+		ndefRecord[4] = (byte)(ndefRecord.length - 6); // New URL length
+		return ndefRecord;
 	}
 
-	public NdefTemplate generateNdefTemplateFrom(byte[] recordTemplate, SDMSettings sdmDefaults) {
-		SDMSettings sdmSettings = sdmDefaults.duplicate();
+	/**
+	 * Generally not used, but this is the internal version of
+	 * generateNdefTemplateFromUrlString which operates on bytes,
+	 * and assumes that the byte array is already formatted according
+	 * to what is required for an NDEF file on this card. 
+	 * @param recordTemplate
+	 * @param sdmDefaults
+	 * @return
+	 */
+	public byte[] generateNdefTemplateFrom(byte[] recordTemplate, SDMSettings sdmDefaults) {
+		SDMSettings sdmSettings = sdmDefaults;
 		byte[] record = recordTemplate;
 
 		Map<Placeholder, byte[]> placeholderTemplates = getPlaceholderTemplate();
@@ -61,11 +81,7 @@ public class NdefTemplateMaster {
 
 		loadPlaceholderOffsets(sdmSettings, placeholderOffsets);		
 
-		NdefTemplate template = new NdefTemplate();
-		template.ndefRecord = record;
-		template.sdmSettings = sdmSettings;
-
-		return template;
+		return record;
 	} 
 
 	Map<Placeholder, byte[]> getPlaceholderTemplate() {
@@ -125,10 +141,11 @@ public class NdefTemplateMaster {
 			sdmSettings.sdmMacOffset = macOffset;
 		}
 		if(readCounterOffset == null) {
-			sdmSettings.sdmOptionReadCounter = false;
+			sdmSettings.sdmReadCounterOffset = 0xffffff;
 		} else {
 			sdmSettings.sdmOptionReadCounter = true;
 			sdmSettings.sdmReadCounterOffset = readCounterOffset;
+			sdmSettings.sdmMetaReadPerm = Constants.ACCESS_EVERYONE; // Required for reading the readcounter directly		
 		}
 		if(fileDataOffset == null) {
 			sdmSettings.sdmOptionEncryptFileData = false;
