@@ -6,7 +6,7 @@ import net.bplearning.ntag424.CommandResult;
 import net.bplearning.ntag424.DnaCommunicator;
 
 public class ChangeFileSettings implements Command {
-	public void run(DnaCommunicator communicator, int fileNum, FileSettings settings) throws IOException {
+	public static void run(DnaCommunicator communicator, int fileNum, FileSettings settings) throws IOException {
         byte[] data = settings.encodeToData();
 
         CommandResult result = communicator.nxpEncryptedCommand(

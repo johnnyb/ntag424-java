@@ -449,8 +449,9 @@ public final class Util {
 
 	public static byte[] ndefDataForUrlString(String urlString) {
 		byte[] hdr = new byte[] {
-			0x00, 
-			0x00,        // Placeholder for data size
+			// See pgs. 30-31 of AN12196 
+			0x00,        // Placeholder for data size (two bytes MSB)
+			0x00,        // 
 			(byte)(Constants.NDEF_MB | Constants.NDEF_ME | Constants.NDEF_SR | Constants.NDEF_TNF_WELL_KNOWN),  // NDEF header flags
 			0x01,        // Length of "type" field
 			0x00,        // URL size placeholder
@@ -458,9 +459,9 @@ public final class Util {
 			0x00         // Just the URI (no prepended protocol)
 		};
 		byte[] urlBytes = urlString.getBytes();
-		byte[] result = combineByteArrays(hdr, urlBytes);
-		result[1] = (byte)(result.length - 2);
-		result[4] = (byte)(urlBytes.length + 1);
+		byte[] result = combineByteArrays(hdr, urlBytes); 
+		result[1] = (byte)(result.length - 2);   // Length of everything that isn't the length
+		result[4] = (byte)(urlBytes.length + 1); // Everything after type field
 
 		return result;
 	}

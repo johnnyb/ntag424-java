@@ -25,6 +25,14 @@ public class NdefTemplateMaster {
 		UID, PICC, MAC, ReadCounter, FileData, MACInputOffset
 	};
 
+	public NdefTemplate generateNdefTemplateFromUrlString(String urlString, SDMSettings sdmDefaults) {
+		byte[] ndefData = Util.ndefDataForUrlString(urlString);
+		NdefTemplate template = generateNdefTemplateFrom(ndefData, sdmDefaults);
+		template.ndefRecord[1] = (byte)(template.ndefRecord.length - 2); // New record length
+		template.ndefRecord[4] = (byte)(template.ndefRecord.length - 6); // New URL length
+		return template;
+	}
+
 	public NdefTemplate generateNdefTemplateFrom(byte[] recordTemplate, SDMSettings sdmDefaults) {
 		SDMSettings sdmSettings = sdmDefaults.duplicate();
 		byte[] record = recordTemplate;
@@ -99,6 +107,8 @@ public class NdefTemplateMaster {
 		Integer readCounterOffset = offsets.get(Placeholder.ReadCounter);
 		Integer fileDataOffset = offsets.get(Placeholder.FileData);
 		Integer macInputOffset = offsets.get(Placeholder.MACInputOffset);
+
+		sdmSettings.sdmEnabled = true;
 
 		if(uidOffset == null) {
 			sdmSettings.sdmOptionUid = false;
