@@ -123,14 +123,14 @@ public class FileSettings {
 		  data.add((byte)perm1);
   
 		  if(settings.sdmSettings.sdmEnabled) {
-			int sdmOptions = Util.lsbBitValue(7, settings.sdmSettings.sdmOptionUid) +
-				Util.lsbBitValue(6, settings.sdmSettings.sdmOptionReadCounter) +
-				Util.lsbBitValue(5, settings.sdmSettings.sdmOptionReadCounterLimit) +
-				Util.lsbBitValue(4, settings.sdmSettings.sdmOptionEncryptFileData) +
-				Util.lsbBitValue(0, settings.sdmSettings.sdmOptionUseAscii);
+			int sdmOptions = Util.unsignedByteToInt(Util.lsbBitValue(7, settings.sdmSettings.sdmOptionUid)) |
+				Util.unsignedByteToInt(Util.lsbBitValue(6, settings.sdmSettings.sdmOptionReadCounter)) |
+				Util.unsignedByteToInt(Util.lsbBitValue(5, settings.sdmSettings.sdmOptionReadCounterLimit)) |
+				Util.unsignedByteToInt(Util.lsbBitValue(4, settings.sdmSettings.sdmOptionEncryptFileData)) |
+				Util.unsignedByteToInt(Util.lsbBitValue(0, settings.sdmSettings.sdmOptionUseAscii));
 			  data.add((byte)sdmOptions);
   
-			  int sdmRights2 = 0xf * Util.lsbBitValue(4) + (settings.sdmSettings.sdmOptionReadCounter ? settings.sdmSettings.sdmReadCounterRetrievalPerm : 0xf);
+			  int sdmRights2 = 0xf0 | (settings.sdmSettings.sdmOptionReadCounter ? settings.sdmSettings.sdmReadCounterRetrievalPerm : 0xf);
 			  data.add((byte)sdmRights2);
 			  int sdmRights1 = settings.sdmSettings.sdmMetaReadPerm * Util.lsbBitValue(4) + settings.sdmSettings.sdmFileReadPerm;
 			  data.add((byte)sdmRights1);

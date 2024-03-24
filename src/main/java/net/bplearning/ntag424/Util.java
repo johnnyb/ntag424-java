@@ -202,19 +202,23 @@ public final class Util {
 		return (b & (1 << bit)) != 0;
 	}
 	
-	public static int leftNibble(Byte input) {
+	public static int leftNibble(byte input) {
 		return (input & 0xF0 ) >> 4;
 	}
 	
-	public static int rightNibble(Byte input) {
+	public static int rightNibble(byte input) {
 		return input & 0x0F;
+	}
+
+	public static final int unsignedByteToInt(byte b) {
+		return (((int)b)&0xff);
 	}
 
 	public static int lsbBytesToInt(byte[] data) {
 		int multiplier = 1;
 		int value = 0;
 		for(byte b: data) {
-			value += b * multiplier;
+			value += unsignedByteToInt(b) * multiplier;
 			multiplier *= 256;
 		}
 		return value;
