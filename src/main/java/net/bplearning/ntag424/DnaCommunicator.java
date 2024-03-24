@@ -206,6 +206,7 @@ public class DnaCommunicator {
 		if(data == null || data.length == 0) {
 			encryptedData = data;
 		} else {
+			log("Data before encryption", data);
 			encryptedData = encryptionMode.encryptData(data);
 		}
 		CommandResult result = nxpMacCommand(cmd, hdr, encryptedData);

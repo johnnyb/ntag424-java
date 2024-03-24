@@ -51,7 +51,7 @@ public class NdefTemplateMaster {
 				replacement
 			);
 			Integer foundAt = searchResult.second;
-			if (foundAt != null) {
+			if (foundAt != null && foundAt != -1) {
 				record = searchResult.first;
 				adjustPlaceholderOffsets(placeholderOffsets, foundAt, template.length, replacement.length);
 				placeholderOffsets.put(p, foundAt);
@@ -95,8 +95,10 @@ public class NdefTemplateMaster {
 		int adjustment = added - removed;
 		for(Placeholder p: offsetList.keySet()) {
 			int offset = offsetList.get(p);
-			offset += adjustment;
-			offsetList.put(p, offset);
+			if(offset >= idx) {
+				offset += adjustment;
+				offsetList.put(p, offset);	
+			}	
 		}
 	}
 
