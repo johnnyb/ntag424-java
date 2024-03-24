@@ -25,6 +25,9 @@ public class WriteData implements Command {
 		);
 		result.throwUnlessSuccessful();
     }
+	public static void run(DnaCommunicator communicator, int fileNum, byte[] data) throws IOException {
+		run(communicator, fileNum, data, 0);
+	}
 
 	public static void run(DnaCommunicator communicator, int fileNum, byte[] data, int offset) throws IOException {
 		FileSettings settings = GetFileSettings.run(communicator, fileNum);
