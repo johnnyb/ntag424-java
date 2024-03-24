@@ -3,6 +3,7 @@ package net.bplearning.ntag424;
 import javax.crypto.spec.IvParameterSpec;
 
 public class Constants {
+	// ** Crypto Constants **
 	public static IvParameterSpec zeroIVPS = new IvParameterSpec(new byte[16]); // pg. 24
 	public static byte[] upper = new byte[] { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55 };
 	public static byte[] lower = new byte[]  { (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa };
@@ -28,6 +29,7 @@ public class Constants {
 		RB_64[63] = true;
 	}
 
+	// ** Chip Constants **
 	// Files on the card
 	public static int CC_FILE_NUMBER = 0x01;
 	public static int CC_FILE_ID = 0xe103;
@@ -40,4 +42,28 @@ public class Constants {
 	public static byte[] DF_NAME = new byte[]{(byte)0xd2, 0x76, 0x00, 0x00, (byte)0x85, 0x01, 0x01};
 
 	public static byte[] FACTORY_KEY = new byte[16];
+
+	// ** NDEF Constants **
+	/** Message begin flag */
+	public static byte NDEF_MB = (byte)0b10000000;
+	/** Message end flag */
+	public static byte NDEF_ME = 0b01000000;
+	/** Chunked flag */
+	public static byte NDEF_CF = 0b00100000;
+	/** Short record flag */
+	public static byte NDEF_SR = 0b00010000;
+	/** IL (ID Length) is present */
+	public static byte NDEF_IL = 0b00001000;
+
+	public static byte NDEF_TNF_EMPTY = 0x00;
+	public static byte NDEF_TNF_WELL_KNOWN = 0x01;
+	public static byte NDEF_TNF_MIME = 0x02;
+	public static byte NDEF_TNF_ABSOLUTE_URI = 0x03; // NOTE - don't use this for URLS, use WELL_KNOWN instead.
+	public static byte NDEF_TNF_EXTERNAL = 0x04;
+	public static byte NDEF_TNF_UNKNOWN = 0x05;
+	public static byte NDEF_TNF_UNCHANGED = 0x06;
+	public static byte NDEF_TNF_RESERVED = 0x07;
+
+	public static byte NDEF_TYPE_TEXT = 'T';
+	public static byte NDEF_TYPE_URL = 'U';
 }

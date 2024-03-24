@@ -125,7 +125,9 @@ public class NdefTemplateMaster {
 			sdmSettings.sdmEncOffset = uidOffset;
 			sdmSettings.sdmEncLength = fileDataLength;
 		}
-		if(macInputOffset != null) {
+		if(macInputOffset == null) {
+			sdmSettings.sdmMacInputOffset = sdmSettings.sdmMacOffset; // Default to zero-length (PICC-only) MAC
+		} else {
 			sdmSettings.sdmMacInputOffset = macInputOffset;
 		}
 	}
