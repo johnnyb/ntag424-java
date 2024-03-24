@@ -4,7 +4,7 @@ public class SDMSettings implements Cloneable {
 	// SDM Options
 	public boolean sdmEnabled = false;
     public boolean sdmOptionUid = false;
-    public boolean sdmOptionReadCounter = false;
+    public boolean sdmOptionReadCounter = true;
     public boolean sdmOptionEncryptFileData = false;
     public boolean sdmOptionUseAscii = true; // NOTE - Not sure the chip supports false
 	public boolean sdmOptionReadCounterLimit = false;
