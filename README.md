@@ -108,3 +108,59 @@ Page numbers are from version 1.1.
 
 Also note that there is a Go implementation of LRP available [here](https://github.com/johnnyb/gocrypto).
 
+## Secure Dynamic Messaging (SDM)
+
+This library has some utility functions for performing SDM and generating SUN (Secure Unique NFC) messages.
+
+This is currently in flux, but the way it works right now is as follows:
+
+1. Create an SDMSettings object
+2. Set the file permissions on the SDMSettings object.
+3. Create an NdefTemplateMaster object and set whether LRP is in use.
+4. Create a structured URL using the components for SDM.
+5. Pass the URL and the SDMSettings to the NdefTemplateMaster object and get the resulting file data.
+6. Write the file data to the NDEF file.
+7. Change the file settings on the NDEF file to use the new SDMSettings object.
+
+Step 3 will probably be removed at some point and this functionality will be integrated into another class.  Probably.
+We may also incorporate some special commands to make some of this easier.
+
+Here is some example code:
+
+```
+// Generate a new SDMSettings object and set the access permissions
+SDMSettings sdmSettings = new SDMSettings();
+sdmSettings.sdmMetaReadPerm = Constants.ACCESS_EVERYONE; // Set to a key to get encrypted PICC data
+sdmSettings.sdmFileReadPerm = Constants.ACCESS_KEY2;     // Used to create the MAC and Encrypt FileData
+sdmSettings.sdmReadCounterRetrievalPerm = Constants.ACCESS_NONE; // Not sure what this is for
+
+// Create the NDEF record and make appropriate updates to SDMSettings
+byte[] ndefRecord = master.generateNdefTemplateFromUrlString("https://www.example.com/{UID}{COUNTER}/{MAC}", sdmSettings);
+
+// Write the data to the NDEF file
+WriteData.run(communicator, Constants.NDEF_FILE_NUMBER, ndefRecord);
+
+// Get the existing file settings:
+FileSettings ndeffs = GetFileSettings.run(communicator, Constants.NDEF_FILE_NUMBER);
+
+// Make any modifications you would like to those settings/permissions
+// ...
+
+// Set the SDMSettings to the newly-created sdmSettings object
+ndeffs.sdmSettings = sdmSettings;
+
+// Make changes to the file
+ChangeFileSettings.run(communicator, Constants.NDEF_FILE_NUMBER, ndeffs);
+```
+
+After this, your tag should be using SDM.  Note that the offsets will auto-expand to match the requirements of the template.
+Template pieces include:
+
+* `{UID}`: Mirror the UID here
+* `{COUNTER}`: Mirror the SDM Read Counter here
+* `{PICC}`: Put the encrypted PICC data here (encrypted with sdmMetaReadPerm key).  If set, be sure to set usesLrp on the NDefMasterTemplate object (affects the size of the PICC data).
+* `{FILE}`: Put the encrypted file here (encrypted with sdmFileReadPerm key).  If set, be sure to set the fileDataLength of the NdefMasterTemplate object.
+* `{MAC}`: Put the MAC data here.
+* `^`: If set, this is the start of the location that will be used for MAC calculation.  If unset, it just becomes the locatin of the start of the MAC, indicating to only MAC the PICC data.
+
+Personally, I like to use `{UID}{COUNTER}` and `{MAC}` rather than `{PICC}` because, if there is a connection issue with the Internet, I at least know what UID my tag was wanting to be.
