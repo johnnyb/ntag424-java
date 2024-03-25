@@ -12,7 +12,7 @@ import net.bplearning.ntag424.Util;
 public class LRPCipher {
 	LRPMultiCipher multiCipher;
 	byte[] key;
-	int counter = 0;
+	long counter = 0;
 	Integer counterSize = 8; // NOTE - the standard says that the counter size is variable, but testing says that it expects it to be fixed at 8 nibbles long
 	LRPCMAC mac;
 
@@ -31,7 +31,7 @@ public class LRPCipher {
 		LinkedList<Integer> nibbles = new LinkedList<>();
 
         int mask = (1 << Constants.nibbleSize) - 1;
-        int ctr = counter;
+        long ctr = counter;
 
         while(true) {
 			if(counterSize == null) { // No fixed counter size - stop when no bytes left
@@ -44,7 +44,7 @@ public class LRPCipher {
 				}	
 			}
 
-			int low = ctr & mask;
+			int low = (int)(ctr & mask);
 			nibbles.add(0, low);
 			ctr = ctr >> 4;
         }
@@ -126,5 +126,9 @@ public class LRPCipher {
 
 	public byte[] cmac(byte[] message) {
 		return mac.perform(message, 16);
+	}
+
+	public void setCounter(long counter) {
+		this.counter = counter;
 	}
 }

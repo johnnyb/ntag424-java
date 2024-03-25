@@ -1,5 +1,7 @@
 package net.bplearning.ntag424.sdm;
 
+import net.bplearning.ntag424.Constants;
+
 public class SDMSettings implements Cloneable {
 	// SDM Options
 	public boolean sdmEnabled = false;
@@ -10,9 +12,9 @@ public class SDMSettings implements Cloneable {
 	public boolean sdmOptionReadCounterLimit = false;
 
 	// SDM Permissions
-    public int sdmMetaReadPerm = 0xe;
-    public int sdmFileReadPerm = 0xe;
-    public int sdmReadCounterRetrievalPerm = 0xe;
+    public int sdmMetaReadPerm = Constants.ACCESS_EVERYONE;
+    public int sdmFileReadPerm = Constants.ACCESS_EVERYONE;
+    public int sdmReadCounterRetrievalPerm = Constants.ACCESS_EVERYONE;
     
 	// SDM Offsets
 	public int sdmUidOffset = 0;

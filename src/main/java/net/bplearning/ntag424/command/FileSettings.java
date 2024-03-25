@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.bplearning.ntag424.CommunicationMode;
+import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.sdm.SDMSettings;
 
@@ -135,7 +136,8 @@ public class FileSettings {
 			  int sdmRights1 = settings.sdmSettings.sdmMetaReadPerm * Util.lsbBitValue(4) + settings.sdmSettings.sdmFileReadPerm;
 			  data.add((byte)sdmRights1);
   
-			  if(settings.sdmSettings.sdmMetaReadPerm == 0xe) {
+			  if(settings.sdmSettings.sdmMetaReadPerm == Constants.ACCESS_EVERYONE) {
+				// If PICC data is read in plaintext, the UID and the ReadCounter are controlled separately
 				  if(settings.sdmSettings.sdmOptionUid) {
 					  data.add(Util.getByte(settings.sdmSettings.sdmUidOffset, 0));
 					  data.add(Util.getByte(settings.sdmSettings.sdmUidOffset, 1));
@@ -147,15 +149,14 @@ public class FileSettings {
 					  data.add(Util.getByte(settings.sdmSettings.sdmReadCounterOffset, 1));
 					  data.add(Util.getByte(settings.sdmSettings.sdmReadCounterOffset, 2));
 				  }
-			  }
-  
-			  if(settings.sdmSettings.sdmMetaReadPerm >= 0 && settings.sdmSettings.sdmMetaReadPerm <= 4) {
+			  } else if(settings.sdmSettings.sdmMetaReadPerm != Constants.ACCESS_NONE) {
+				// If PICC data is encrypted, its all in one spot together
 				  data.add(Util.getByte(settings.sdmSettings.sdmPiccDataOffset, 0));
 				  data.add(Util.getByte(settings.sdmSettings.sdmPiccDataOffset, 1));
 				  data.add(Util.getByte(settings.sdmSettings.sdmPiccDataOffset, 2));
 			  }
   
-			  if(settings.sdmSettings.sdmFileReadPerm != 0xf) {
+			  if(settings.sdmSettings.sdmFileReadPerm != Constants.ACCESS_NONE) {
 				  data.add(Util.getByte(settings.sdmSettings.sdmMacInputOffset, 0));
 				  data.add(Util.getByte(settings.sdmSettings.sdmMacInputOffset, 1));
 				  data.add(Util.getByte(settings.sdmSettings.sdmMacInputOffset, 2));

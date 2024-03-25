@@ -15,6 +15,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+import net.bplearning.ntag424.aes.AESCMAC;
+import net.bplearning.ntag424.lrp.LRPCipher;
+import net.bplearning.ntag424.lrp.LRPMultiCipher;
+
 public final class Util {
 	public final static byte getByte(long value, int byteNumber) {
 		while(byteNumber > 0) {
@@ -214,6 +218,16 @@ public final class Util {
 		return (((int)b)&0xff);
 	}
 
+	public static long msbBytesToLong(byte[] data) {
+		long multiplier = 1;
+		long value = 0;
+		for(int idx = data.length - 1; idx >= 0; idx--) {
+			value += unsignedByteToInt(data[idx]) * multiplier;
+			multiplier *= 256;
+		}
+		return value;
+	}
+
 	public static int lsbBytesToInt(byte[] data) {
 		int multiplier = 1;
 		int value = 0;
@@ -283,6 +297,36 @@ public final class Util {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public static byte[] simpleAesCmac(byte[] key, byte[] message) {
+		SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+		return simpleAesCmac(keySpec, message);
+	}
+
+	public static byte[] simpleAesCmac(SecretKeySpec key, byte[] message) {
+		try {
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, key, Constants.zeroIVPS);
+            AESCMAC mac = new AESCMAC(cipher, key);
+            return mac.perform(message, Constants.blockSize);
+        } catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
+            // Should not occur
+            e.printStackTrace();
+            return null;
+        }
+	}
+
+	public static byte[] simpleLrpDecrypt(byte[] key, int cipherNum, byte[] counterBytes, byte[] encryptedData) {
+		return simpleLrpDecrypt(key, cipherNum, msbBytesToLong(counterBytes), encryptedData);
+	}
+
+	public static byte[] simpleLrpDecrypt(byte[] key, int cipherNum, long counter, byte[] encryptedData) {
+			LRPMultiCipher lrp = new LRPMultiCipher(key);
+			LRPCipher cipher = lrp.generateCipher(cipherNum);
+			cipher.setCounter(counter);
+			cipher.setCounterSize(16); // Not sure about this
+			return cipher.cryptFullBlocks(encryptedData, Cipher.DECRYPT_MODE);
 	}
 
 	// NOTE - documentation not clear if this is supposed to be evens (zero-indexed) or evens (one-indexed)
