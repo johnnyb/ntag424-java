@@ -105,16 +105,7 @@ public class AESEncryptionMode implements EncryptionMode {
 
 	@Override
 	public byte[] generateMac(byte[] message) {
-        try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, sessionMacKey, Constants.zeroIVPS);
-            AESCMAC mac = new AESCMAC(cipher, sessionMacKey);
-            return mac.perform(message, BLOCKSIZE_BYTES);
-        } catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
-            // Should not occur
-            e.printStackTrace();
-            return null;
-        }
+        return Util.simpleAesCmac(sessionMacKey, message);
 	}
 
     public static boolean authenticateEV2(DnaCommunicator communicator, int keyNum, byte[] keyData) throws IOException {
