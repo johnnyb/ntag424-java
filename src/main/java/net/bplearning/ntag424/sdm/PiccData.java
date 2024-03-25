@@ -2,13 +2,15 @@ package net.bplearning.ntag424.sdm;
 
 import javax.crypto.Cipher;
 
+import net.bplearning.ntag424.CMAC;
 import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.lrp.LRPCMAC;
 import net.bplearning.ntag424.lrp.LRPCipher;
 import net.bplearning.ntag424.lrp.LRPMultiCipher;
 
 public class PiccData {
 	public byte[] uid;
-	public long readCounter;
+	public int readCounter;
 
 	public static PiccData decodeFromBytes(byte[] piccRecord) {
 		PiccData pdata = new PiccData();
@@ -59,6 +61,7 @@ public class PiccData {
 		LRPMultiCipher multiCipher = new LRPMultiCipher(macKey);
 		LRPCipher cipher = multiCipher.generateCipher(0);
 		byte[] sv = generateLRPSessionVector();
+		System.out.println("SV: " + Util.byteToHex(sv));
 		return cipher.cmac(sv);
 	}
 
@@ -112,5 +115,13 @@ public class PiccData {
 			0x1e,
 			(byte)0xe1
 		});
+	}
+
+	
+
+	public CMAC generateLRPCMAC(byte[] key) {
+		LRPMultiCipher multiCipher = new LRPMultiCipher(generateLRPSessionMacKey(key));
+		LRPCipher cipher = multiCipher.generateCipher(0);
+		return new LRPCMAC(cipher);
 	}
 }
