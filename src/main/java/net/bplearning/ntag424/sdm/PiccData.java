@@ -1,9 +1,17 @@
 package net.bplearning.ntag424.sdm;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
 import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 import net.bplearning.ntag424.CMAC;
+import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.aes.AESCMAC;
 import net.bplearning.ntag424.lrp.LRPCMAC;
 import net.bplearning.ntag424.lrp.LRPCipher;
 import net.bplearning.ntag424.lrp.LRPMultiCipher;
@@ -11,8 +19,18 @@ import net.bplearning.ntag424.lrp.LRPMultiCipher;
 public class PiccData {
 	public byte[] uid;
 	public int readCounter;
+	public boolean usesLrp;
+	byte[] macFileKey;
 
-	public static PiccData decodeFromBytes(byte[] piccRecord) {
+	public PiccData(byte[] uid, int readCounter, boolean usesLrp) {
+		this.uid = uid;
+		this.readCounter = readCounter;
+		this.usesLrp = usesLrp;
+	}
+
+	protected PiccData() { }
+
+	public static PiccData decodeFromBytes(byte[] piccRecord, boolean usesLrp) {
 		PiccData pdata = new PiccData();
 
 		byte tag = piccRecord[0];
@@ -30,6 +48,8 @@ public class PiccData {
 		} else {
 			pdata.readCounter = Util.lsbBytesToInt(Util.subArrayOf(piccRecord, curIdx, 3));
 		}
+
+		pdata.usesLrp = usesLrp;
 
 		return pdata;
 	}
@@ -54,14 +74,13 @@ public class PiccData {
 			alldata = Util.simpleAesDecrypt(key, encryptedData);
 		}
 
-		return decodeFromBytes(alldata);
+		return decodeFromBytes(alldata, usesLrp);
 	}
 
 	public byte[] generateLRPSessionMacKey(byte[] macKey) {
 		LRPMultiCipher multiCipher = new LRPMultiCipher(macKey);
 		LRPCipher cipher = multiCipher.generateCipher(0);
 		byte[] sv = generateLRPSessionVector();
-		System.out.println("SV: " + Util.byteToHex(sv));
 		return cipher.cmac(sv);
 	}
 
@@ -117,11 +136,42 @@ public class PiccData {
 		});
 	}
 
-	
-
 	public CMAC generateLRPCMAC(byte[] key) {
 		LRPMultiCipher multiCipher = new LRPMultiCipher(generateLRPSessionMacKey(key));
 		LRPCipher cipher = multiCipher.generateCipher(0);
 		return new LRPCMAC(cipher);
+	}
+
+	public CMAC generateAESCMAC(byte[] key) {
+            try {
+				SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+
+				Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+
+				cipher.init(Cipher.ENCRYPT_MODE, keySpec, Constants.zeroIVPS);
+				AESCMAC mac = new AESCMAC(cipher, keySpec);
+				return null;
+			} catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+
+	public byte[] performCMAC(byte[] message) {
+		CMAC cmac = usesLrp ? generateLRPCMAC(macFileKey) : generateAESCMAC(macFileKey);
+		byte[] result = cmac.perform(message, 16);
+		return result;
+	}
+
+	public byte[] performShortCMAC(byte[] message) {
+		return Util.shortenCMAC(performCMAC(message));
+	};
+
+	public void setMacFileKey(byte[] key) {
+		macFileKey = key;
+	}
+
+	public byte[] decryptFileData(byte[] encryptedData) {
+		throw new RuntimeException("Not yet implemented");
 	}
 }

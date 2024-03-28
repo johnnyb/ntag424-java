@@ -164,3 +164,31 @@ Template pieces include:
 * `^`: If set, this is the start of the location that will be used for MAC calculation.  If unset, it just becomes the locatin of the start of the MAC, indicating to only MAC the PICC data.
 
 Personally, I like to use `{UID}{COUNTER}` and `{MAC}` rather than `{PICC}` because, if there is a connection issue with the Internet, I at least know what UID my tag was wanting to be.
+
+## SDM Validation
+
+You can also use this library on the "other side" to validate SDM messages and read their contents.
+For unencrypted PICC data, do the following:
+
+```
+PiccData picc = new PiccData(uid, readCounter, usesLrp);
+```
+
+If the UID is not mirrored, set it to null.  If the readCounter is not mirrored, set it to 0.
+
+For encrypted PICC data, do the following:
+
+```
+PiccData picc = PiccData.decodeFromEncryptedBytes(encryptedBytes, key, usesLrp);
+```
+
+Note that the key for decrypting the PICC data can be a different key from validating the MAC / decrypting the file data.
+Therefore, you have to set this key with `setMacFileKey()`.
+
+Then, you can validate the MAC (use an empty byte array for the message if there isn't one):
+
+``
+picc.setMacFileKey(macFileKey);
+picc.performShortMac(new byte[0]); // MAC on PICC-only data
+picc.decryptFileData(filedata);
+```
