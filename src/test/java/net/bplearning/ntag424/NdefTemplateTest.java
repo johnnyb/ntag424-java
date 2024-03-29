@@ -1,5 +1,7 @@
 package net.bplearning.ntag424;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 import net.bplearning.ntag424.sdm.NdefTemplateMaster;
@@ -13,8 +15,6 @@ public class NdefTemplateTest {
 		String url = "http://example.com/{PICC}/^{MAC}";
 		byte[] ndefRecord = master.generateNdefTemplateFrom(url.getBytes(), s);
 		String newUrl = new String(ndefRecord);
-		if(!newUrl.equals("http://example.com/********************************/****************")) {
-			throw new RuntimeException("Result: " + newUrl);
-		}
+		assertEquals("Failed URL generation", "http://example.com/********************************/****************", newUrl);
 	}
 }

@@ -1,5 +1,7 @@
 package net.bplearning.ntag424;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import org.junit.Test;
 
 import net.bplearning.ntag424.lrp.LRPMultiCipher;
@@ -16,8 +18,6 @@ public class SdmTest {
 		piccData.setMacFileKey(key);
 		byte[] shortMac = piccData.performShortCMAC(new byte[0]);
 		byte[] expectedShortMac = Util.hexToByte("A9DAF6E5B2E583ED");
-		if(!Util.arraysEqual(expectedShortMac, shortMac)) {
-			throw new RuntimeException("Wrong short MAC: " + Util.byteToHex(shortMac) + " (expected " + Util.byteToHex(expectedShortMac) + ")");
-		}
+		assertArrayEquals("SDM Mac Calculation", expectedShortMac, shortMac);
 	}
 }

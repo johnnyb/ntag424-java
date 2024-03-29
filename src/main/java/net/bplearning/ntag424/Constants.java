@@ -43,6 +43,8 @@ public class Constants {
 
 	public static byte[] FACTORY_KEY = new byte[16];
 
+	public static final byte[] DESFIRE_AID = new byte[] {0x30, 0x42, (byte)0xF5};
+
 	// ** NDEF Constants **
 	/** Message begin flag */
 	public static byte NDEF_MB = (byte)0b10000000;
@@ -74,4 +76,5 @@ public class Constants {
 	public static final int ACCESS_KEY4 = 4;
 	public static final int ACCESS_EVERYONE = 0xe;
 	public static final int ACCESS_NONE = 0xf;
+
 }

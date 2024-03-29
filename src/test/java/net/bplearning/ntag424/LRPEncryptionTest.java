@@ -1,5 +1,7 @@
 package net.bplearning.ntag424;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import javax.crypto.Cipher;
 
 import org.junit.Test;
@@ -23,16 +25,12 @@ public class LRPEncryptionTest {
 		byte[] tiEncrypted = Util.hexToByte("FA E1 9D 27 82 38 CA 84 1E 37 EC EB F7 5B 0E 72");
 	   byte[] tiDecrypted = mode.getSessionLrpEncryptionCipher().cryptFullBlocks(tiEncrypted, Cipher.DECRYPT_MODE);
 	   byte[] expectedTiDecrypted = Util.hexToByte("2F 0C F7 91 02 00 00 00 00 00 02 00 00 00 00 00");
-		if(!Util.arraysEqual(tiDecrypted, expectedTiDecrypted)) {
-			throw new RuntimeException("Invalid TI decryption: " + Util.byteToHex(tiDecrypted));
-		}
+	   assertArrayEquals("Error decrypting TI", expectedTiDecrypted, tiDecrypted);
 
 		byte[] cipherData = Util.hexToByte("51 00 00 2F 0C F7 91");
 		byte[] longMac = mode.generateMac(cipherData);
 		byte[] shortMac = Util.shortenCMAC(longMac);
 		byte[] expectedShortMac = Util.hexToByte("79 00 03 E6 9F 33 0E AC");
-		if(!Util.arraysEqual(expectedShortMac, shortMac)) {
-			throw new RuntimeException("Bad MAC: " + Util.byteToHex(shortMac));
-		}
+		assertArrayEquals("MAC error", expectedShortMac, shortMac);
 	}
 }

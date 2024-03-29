@@ -192,3 +192,40 @@ picc.setMacFileKey(macFileKey);
 picc.performShortMac(new byte[0]); // MAC on PICC-only data
 picc.decryptFileData(filedata);
 ```
+
+## SDM Setups
+
+This section describes some common ways to configure SDM.
+SDM has a lot of options, so just picking a starting point is sometimes difficult.
+
+### Key diversification
+
+Key diversification allows you to have a different key on each device so that if someone were to steal the keys from the tag (which is itself a very difficult thing to do) it would not help them to know the keys for the other tags.
+
+On the other hand, for key diversification to work, you need to know *which* key is on *which* device.
+The standard way of doing this is by having a single master key which gets diversified by doing a CMAC using the master key with a combination of the tag's UID and some additional data known as the "diversification data" (this is used mostly to make sure the data is long enough to get a good CMAC).
+
+Generally, the diversification data is constructed as follows.  
+First, decide on a "system identifier".
+This is a few bytes which is often an ASCII-ized version of your application name.
+If your application is named "foo" then your system identifier is `new byte[] {0x66, 0x6f, 0x6f}`.
+Then, use the `KeyInfo` class to construct your key.
+Note that there is also an "application identifier" available.
+I am not clear what that is supposed to be, but the document this is based on (AN10922) uses the "3-byte DESfire AID" (0x3042F5) in its example, so that is the default here.
+
+```
+byte[] masterKey = new byte[]{ /* ... */ };
+KeyInfo keyInfo = new KeyInfo();
+keyInfo.key = masterKey;
+keyInfo.systemIdentifier = new byte[] {0x66, 0x6f, 0x6f};
+byte[] cardKey = keyInfo.generateKeyForCardUid(uidBytes);
+```
+
+Note that usually the key that is used for encrypting PICC data (if any) is *not* diversified, because you need to know that key *before* you know the UID.
+Then, once the UID is obtained, then that can be used to generate a UID-specific diversified key that is used for the file data encryption (if any) and the MAC (which is almost always used).
+
+I think the general convention is to use App Key 2 for your non-diversified PICC encryption key, and then use App Key 3 for your diversified key.
+Note, however, that your diversified key SHOULD NOT be just a diversification of your non-diversified key.
+It should be based on a *separate* master key.
+Otherwise, if someone were to decode one of your tags, obtaining the key would give them all the information they needed to generate and fake diversified keys.
+Keeping the master key for your diversified keys secret is an absolute imperative for the system to work.
