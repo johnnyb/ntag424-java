@@ -137,10 +137,8 @@ public class NdefTemplateMaster {
 
 		sdmSettings.sdmEnabled = true;
 
-		if(uidOffset == null) {
-			sdmSettings.sdmOptionUid = false;
-		} else {
-			sdmSettings.sdmOptionUid = true;
+		if(uidOffset != null) {
+			sdmSettings.sdmOptionUid = true; // Force UID offset to be true if there was one set
 			sdmSettings.sdmUidOffset = uidOffset;
 		}
 		if(piccOffset != null) {
