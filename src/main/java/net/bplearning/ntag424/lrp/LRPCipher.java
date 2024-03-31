@@ -3,6 +3,7 @@ package net.bplearning.ntag424.lrp;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.crypto.Cipher;
 
@@ -75,7 +76,6 @@ public class LRPCipher {
 
 	public byte[] cryptFullBlocks(byte[] src, int cryptMode) {
 		// Algorithm 4 (pg. 7)
-
         if((src.length % Constants.blockSize) != 0) {
             throw new RuntimeException("Bad block size");
         }

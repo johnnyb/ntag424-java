@@ -198,7 +198,13 @@ picc.decryptFileData(filedata);
 This section describes some common ways to configure SDM.
 SDM has a lot of options, so just picking a starting point is sometimes difficult.
 
-### Key diversification
+Personally, my preferred method is to create an NDEF URL that looks like this: "https://www.example.com/tagread/{UID}{COUNTER}/{MAC}"
+
+Basically, this puts the UID and counter in plaintext.
+This means that if something is scanning but is not connected to the Internet, it can in fact read the UID off of the card.
+
+
+## Key diversification
 
 Key diversification allows you to have a different key on each device so that if someone were to steal the keys from the tag (which is itself a very difficult thing to do) it would not help them to know the keys for the other tags.
 

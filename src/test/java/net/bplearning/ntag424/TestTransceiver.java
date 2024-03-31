@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * This class is a test fixture which acts
+ * as a transceiver to record communication
+ * I/O 
+ */
 public class TestTransceiver implements DnaCommunicator.ThrowableFunction<byte[], byte[], IOException> {
 	public List<byte[]> responses = new LinkedList<>();
 	public int lastResponseIndex = -1;

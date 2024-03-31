@@ -1,5 +1,7 @@
 package net.bplearning.ntag424.sdm;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -67,7 +69,7 @@ public class PiccData {
 			// LRP encodes the LRP counter in the first 8 bytes
 			alldata = Util.simpleLrpDecrypt(
 				key, 0, 
-				Util.subArrayOf(encryptedData, 0, 8), 
+				Util.subArrayOf(encryptedData, 0, 8),
 				Util.subArrayOf(encryptedData, 8, 16)
 			);
 		} else {
@@ -150,7 +152,7 @@ public class PiccData {
 
 				cipher.init(Cipher.ENCRYPT_MODE, keySpec, Constants.zeroIVPS);
 				AESCMAC mac = new AESCMAC(cipher, keySpec);
-				return null;
+				return mac;
 			} catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException e) {
 				e.printStackTrace();
 				return null;

@@ -1,5 +1,6 @@
 package net.bplearning.ntag424;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -219,11 +220,11 @@ public final class Util {
 	}
 
 	public static long msbBytesToLong(byte[] data) {
-		long multiplier = 1;
+		long shifter = 0;
 		long value = 0;
 		for(int idx = data.length - 1; idx >= 0; idx--) {
-			value += unsignedByteToInt(data[idx]) * multiplier;
-			multiplier *= 256;
+			value |= ((long)unsignedByteToInt(data[idx])) << shifter;
+			shifter += 8;
 		}
 		return value;
 	}
@@ -339,11 +340,6 @@ public final class Util {
         return evens;
 	}
 
-	public static byte[] diversifyKey(CMAC cmac, byte[] applicationInfo, byte[] identifier) {
-		byte[] data = Util.combineByteArrays(new byte[]{0x01}, identifier, applicationInfo);
-        return cmac.perform(data, 16);
-	}
-
 	/**
 	 * Converts an array of bytes to an array of nibbles.
 	 * The result is an int array simply for convenience,
@@ -435,6 +431,10 @@ public final class Util {
 			result[i] = bytes.get(i);
 		}
 		return result;
+	}
+
+	public static byte[] hexStringBytesToBytes(byte[] hexStringBytes) {
+		return Util.hexToByte(new String(hexStringBytes, StandardCharsets.US_ASCII));
 	}
 
 	/**
