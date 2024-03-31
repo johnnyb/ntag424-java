@@ -107,10 +107,13 @@ public class PiccData {
 		byte[] sv = new byte[16];
 		System.arraycopy(prefix, 0, sv, 0, prefix.length);
 		int svIdx = prefix.length;
-		if(!Util.arraysEqual(uid, new byte[]{0,0,0,0,0,0,0})) {
-			System.arraycopy(uid, 0, sv, svIdx, uid.length);
-			svIdx += uid.length;
+		if(uid != null) {
+			if(!Util.arraysEqual(uid, new byte[]{0,0,0,0,0,0,0})) {
+				System.arraycopy(uid, 0, sv, svIdx, uid.length);
+				svIdx += uid.length;
+			}
 		}
+
 		if(readCounter > 0) {
 			byte[] readCounterBytes = new byte[] {
 				Util.getByte(readCounter, 0),

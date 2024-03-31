@@ -39,7 +39,7 @@ public class LRPCMAC implements CMAC {
 
 	public byte[] perform(byte[] message, int lengthBytes) {
 		int length = lengthBytes * 8;
-
+        if(message == null) { message = new byte[0]; }
         // Block out message into groups (Steps 2-3)
         int b = Constants.blockSize * 8;
         boolean[] messageBits = Util.toBitArray(message);

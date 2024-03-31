@@ -61,6 +61,7 @@ public class AESCMAC implements CMAC {
     }
 
     public byte[] perform(byte[] message, int lengthBytes) {
+		if(message == null) { message = new byte[0]; }
 		try {
 			cipher.init(Cipher.ENCRYPT_MODE, key, Constants.zeroIVPS); // Pg. 24
 
