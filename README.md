@@ -187,7 +187,7 @@ Therefore, you have to set this key with `setMacFileKey()`.
 
 Then, you can validate the MAC (use an empty byte array for the message if there isn't one):
 
-``
+```
 picc.setMacFileKey(macFileKey);
 picc.performShortMac(new byte[0]); // MAC on PICC-only data
 picc.decryptFileData(filedata);
