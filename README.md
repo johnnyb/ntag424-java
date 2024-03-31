@@ -159,7 +159,7 @@ Template pieces include:
 * `{UID}`: Mirror the UID here
 * `{COUNTER}`: Mirror the SDM Read Counter here
 * `{PICC}`: Put the encrypted PICC data here (encrypted with sdmMetaReadPerm key).  If set, be sure to set usesLrp on the NDefMasterTemplate object (affects the size of the PICC data).
-* `{FILE}`: Put the encrypted file here (encrypted with sdmFileReadPerm key).  If set, be sure to set the fileDataLength of the NdefMasterTemplate object.
+* `{FILE}`: Put the encrypted secret data here (encrypted with sdmFileReadPerm key).  If set, be sure to set the fileDataLength of the NdefMasterTemplate object.
 * `{MAC}`: Put the MAC data here.
 * `^`: If set, this is the start of the location that will be used for MAC calculation.  If unset, it just becomes the locatin of the start of the MAC, indicating to only MAC the PICC data.
 
@@ -201,7 +201,12 @@ SDM has a lot of options, so just picking a starting point is sometimes difficul
 Personally, my preferred method is to create an NDEF URL that looks like this: "https://www.example.com/tagread/{UID}{COUNTER}/{MAC}"
 
 Basically, this puts the UID and counter in plaintext.
-This means that if something is scanning but is not connected to the Internet, it can in fact read the UID off of the card.
+This means that if something is scanning but is not connected to the Internet, it can in fact read the UID off of the card from the URL.
+But, if you are connected to the Internet, it can do additional validation.
+
+For general purposes, I personally recommend any additional information be stored on the server and retrieved rather than encoded into the card.
+It just makes life easier, because then you just have an NDEF record to deal with, and you can easily link the data to the card after-the-fact with minimal tooling.
+Basically, you have a card programmer, and, after the cards are programmed with your keys/URL, you can use other devices to tie those cards to something, and they don't need your encryption keys to do it.
 
 
 ## Key diversification
