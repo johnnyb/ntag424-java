@@ -19,6 +19,7 @@ public class NdefTemplateMaster {
 	public byte[] placeholderFileData = "{FILE}".getBytes();
 	public byte[] placeholderMACInputOffset = "^".getBytes();
 	public byte overwriteChar = '*';
+	/** Number of bytes in the file to mirror.  Must be a multiple of 16.  These will be ASCII-encoded if usesASCII is true (the default). */
 	public int fileDataLength;
 	public boolean usesLRP;
 
@@ -95,14 +96,22 @@ public class NdefTemplateMaster {
 		return ptemps;
 	}
 
+	int getAsciiMultiplier(SDMSettings settings) {
+		return settings.sdmOptionUseAscii ? 2 : 1;
+	}
+
+	int getEncodedFileDataLength(SDMSettings settings) {
+		return Util.roundUpToMultiple(fileDataLength, 16) * getAsciiMultiplier(settings);
+	}
+
 	Map<Placeholder, Integer> getPlaceholderLengths(SDMSettings settings) {
-		int asciiMultiplier = settings.sdmOptionUseAscii ? 2 : 1;
+		int asciiMultiplier = getAsciiMultiplier(settings);
 		Map<Placeholder, Integer> ptemps = new HashMap<>();
 		ptemps.put(Placeholder.UID, 7 * asciiMultiplier);
 		ptemps.put(Placeholder.PICC, (usesLRP ? 24 : 16) * asciiMultiplier);
 		ptemps.put(Placeholder.MAC, 8 * asciiMultiplier);
 		ptemps.put(Placeholder.ReadCounter, 3 * asciiMultiplier);
-		ptemps.put(Placeholder.FileData, Util.roundUpToMultiple(fileDataLength, 16) * asciiMultiplier);
+		ptemps.put(Placeholder.FileData, getEncodedFileDataLength(settings));
 		ptemps.put(Placeholder.MACInputOffset, 0);
 		return ptemps;
 	}
@@ -151,8 +160,8 @@ public class NdefTemplateMaster {
 			sdmSettings.sdmOptionEncryptFileData = false;
 		} else {
 			sdmSettings.sdmOptionEncryptFileData = true;
-			sdmSettings.sdmEncOffset = uidOffset;
-			sdmSettings.sdmEncLength = fileDataLength;
+			sdmSettings.sdmEncOffset = fileDataOffset;
+			sdmSettings.sdmEncLength = fileDataLength * getAsciiMultiplier(sdmSettings);
 		}
 		if(macInputOffset == null) {
 			sdmSettings.sdmMacInputOffset = sdmSettings.sdmMacOffset; // Default to zero-length (PICC-only) MAC
