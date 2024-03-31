@@ -79,7 +79,8 @@ public class PiccData {
 		return decodeFromBytes(alldata, usesLrp);
 	}
 
-	public byte[] generateLRPSessionMacKey(byte[] macKey) {
+	public byte[] generateLRPSessionKey(byte[] macKey) {
+		// Pg. 42
 		LRPMultiCipher multiCipher = new LRPMultiCipher(macKey);
 		LRPCipher cipher = multiCipher.generateCipher(0);
 		byte[] sv = generateLRPSessionVector();
@@ -142,7 +143,7 @@ public class PiccData {
 	}
 
 	public CMAC generateLRPCMAC(byte[] key) {
-		LRPMultiCipher multiCipher = new LRPMultiCipher(generateLRPSessionMacKey(key));
+		LRPMultiCipher multiCipher = new LRPMultiCipher(generateLRPSessionKey(key));
 		LRPCipher cipher = multiCipher.generateCipher(0);
 		return new LRPCMAC(cipher);
 	}
@@ -177,6 +178,21 @@ public class PiccData {
 	}
 
 	public byte[] decryptFileData(byte[] encryptedData) {
-		throw new RuntimeException("Not yet implemented");
+		if(usesLrp) {
+			// Counter transformation is defined on pg. 39
+			byte[] counterBytes = new byte[] {
+				Util.getByte(readCounter, 0),
+				Util.getByte(readCounter, 1),
+				Util.getByte(readCounter, 2),
+				0, 0, 0
+			};
+			long newCounter = Util.msbBytesToLong(counterBytes);
+
+			byte[] sessionKey = generateLRPSessionKey(macFileKey);
+			return Util.simpleLrpDecrypt(sessionKey, 1, newCounter, 12, encryptedData);
+
+		} else {
+			return Util.simpleAesDecrypt(macFileKey, encryptedData);
+		}
 	}
 }

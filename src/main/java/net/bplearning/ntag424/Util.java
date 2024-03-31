@@ -323,12 +323,16 @@ public final class Util {
 	}
 
 	public static byte[] simpleLrpDecrypt(byte[] key, int cipherNum, long counter, byte[] encryptedData) {
-			LRPMultiCipher lrp = new LRPMultiCipher(key);
-			LRPCipher cipher = lrp.generateCipher(cipherNum);
-			cipher.setCounter(counter);
-			cipher.setCounterSize(16); // Not sure about this
-			return cipher.cryptFullBlocks(encryptedData, Cipher.DECRYPT_MODE);
+			return simpleLrpDecrypt(key, cipherNum, counter, 16, encryptedData);
 	}
+
+	public static byte[] simpleLrpDecrypt(byte[] key, int cipherNum, long counter, Integer counterSize, byte[] encryptedData) {
+		LRPMultiCipher lrp = new LRPMultiCipher(key);
+		LRPCipher cipher = lrp.generateCipher(cipherNum);
+		cipher.setCounter(counter);
+		cipher.setCounterSize(counterSize); // Not sure about this
+		return cipher.cryptFullBlocks(encryptedData, Cipher.DECRYPT_MODE);
+}
 
 	// NOTE - documentation not clear if this is supposed to be evens (zero-indexed) or evens (one-indexed)
     //      - AN12196 pg. 21 indicates that it is one-indexed evens

@@ -38,8 +38,11 @@ public class NdefTemplateMaster {
 	 * @return
 	 */
 	public byte[] generateNdefTemplateFromUrlString(String urlString, SDMSettings sdmDefaults) {
+		return generateNdefTemplateFromUrlString(urlString, null, sdmDefaults);
+	}
+	public byte[] generateNdefTemplateFromUrlString(String urlString, byte[] secretData, SDMSettings sdmDefaults) {
 		byte[] ndefData = Util.ndefDataForUrlString(urlString);
-		byte[] ndefRecord = generateNdefTemplateFrom(ndefData, sdmDefaults);
+		byte[] ndefRecord = generateNdefTemplateFrom(ndefData, secretData, sdmDefaults);
 		ndefRecord[1] = (byte)(ndefRecord.length - 2); // New record length
 		ndefRecord[4] = (byte)(ndefRecord.length - 6); // New URL length
 		return ndefRecord;
@@ -55,7 +58,14 @@ public class NdefTemplateMaster {
 	 * @return
 	 */
 	public byte[] generateNdefTemplateFrom(byte[] recordTemplate, SDMSettings sdmDefaults) {
+		return generateNdefTemplateFrom(recordTemplate, null, sdmDefaults);
+	}
+
+	public byte[] generateNdefTemplateFrom(byte[] recordTemplate, byte[] secretData, SDMSettings sdmDefaults) {
 		SDMSettings sdmSettings = sdmDefaults;
+		if(secretData != null) {
+			fileDataLength = secretData.length;
+		}
 		byte[] record = recordTemplate;
 
 		Map<Placeholder, byte[]> placeholderTemplates = getPlaceholderTemplate();
@@ -81,6 +91,9 @@ public class NdefTemplateMaster {
 		}
 
 		loadPlaceholderOffsets(sdmSettings, placeholderOffsets);		
+		if(secretData != null) {
+			System.arraycopy(secretData, 0, record, sdmSettings.sdmEncOffset, secretData.length);
+		}
 
 		return record;
 	} 
@@ -162,7 +175,13 @@ public class NdefTemplateMaster {
 			sdmSettings.sdmEncLength = fileDataLength * getAsciiMultiplier(sdmSettings);
 		}
 		if(macInputOffset == null) {
-			sdmSettings.sdmMacInputOffset = sdmSettings.sdmMacOffset; // Default to zero-length (PICC-only) MAC
+			if(sdmSettings.sdmOptionEncryptFileData) {
+				// With encrypted file contents, default to start of file data
+				sdmSettings.sdmMacInputOffset = sdmSettings.sdmEncOffset;
+			} else {
+				// Without encrypted file contents, default to zero-length (PICC-only) MAC
+				sdmSettings.sdmMacInputOffset = sdmSettings.sdmMacOffset; 
+			}
 		} else {
 			sdmSettings.sdmMacInputOffset = macInputOffset;
 		}
