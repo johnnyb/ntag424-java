@@ -41,7 +41,7 @@ public class LRPCMAC implements CMAC {
 		int length = lengthBytes * 8;
         if(message == null) { message = new byte[0]; }
         // Block out message into groups (Steps 2-3)
-        int b = Constants.blockSize * 8;
+        int b = LRPCipher.BLOCKSIZE_BITS;
         boolean[] messageBits = Util.toBitArray(message);
         int mlen = messageBits.length;
         List<boolean[]> m_list = Util.groupBlocks(messageBits, b);

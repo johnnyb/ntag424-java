@@ -20,9 +20,10 @@ import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.aes.AESCMAC;
 import net.bplearning.ntag424.exception.DelayException;
 import net.bplearning.ntag424.exception.EncryptionException;
-import net.bplearning.ntag424.exception.ProtocolException;
 
 public class AESEncryptionMode implements EncryptionMode {
+    static final int BLOCKSIZE_BYTES = 16;
+
 	protected DnaCommunicator communicator;
 	protected SecretKeySpec key;
     protected SecretKeySpec sessionEncryptionKey;
@@ -37,8 +38,6 @@ public class AESEncryptionMode implements EncryptionMode {
         sessionEncryptionKey = generateAESSessionKey(new byte[]{(byte)0xa5, 0x5a});
         sessionMacKey = generateAESSessionKey(new byte[]{0x5a, (byte)0xa5});
 	}
-
-    static final int BLOCKSIZE_BYTES = 16;
 
 	@Override
 	public byte[] encryptData(byte[] message) {
@@ -217,7 +216,7 @@ public class AESEncryptionMode implements EncryptionMode {
             cipher.init(Cipher.DECRYPT_MODE, key, Constants.zeroIVPS);
             byte[] sv = generateAESSessionVector(purpose);
             AESCMAC cmac = new AESCMAC(cipher, key);
-            byte[] keyData = cmac.perform(sv, 16);
+            byte[] keyData = cmac.perform(sv, BLOCKSIZE_BYTES);
     
             return new SecretKeySpec(keyData, "AES");
         } catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {

@@ -15,6 +15,8 @@ import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.Util;
 
 public class AESCMAC implements CMAC {
+	static final int BLOCKSIZE_BITS = 128;
+
 	final Cipher cipher;
     final SecretKeySpec key;
 	boolean[] subkey1;
@@ -32,8 +34,6 @@ public class AESCMAC implements CMAC {
 			e.printStackTrace();
 		}
 	}
-
-	static final int BLOCKSIZE_BITS = 128;
 
     boolean[] generateSubkey1() throws InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
         cipher.init(Cipher.ENCRYPT_MODE, key, Constants.zeroIVPS); // Pg. 24

@@ -310,7 +310,7 @@ public final class Util {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, key, Constants.zeroIVPS);
             AESCMAC mac = new AESCMAC(cipher, key);
-            return mac.perform(message, Constants.blockSize);
+            return mac.perform(message, Constants.CMAC_SIZE);
         } catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
             // Should not occur
             e.printStackTrace();
@@ -319,11 +319,7 @@ public final class Util {
 	}
 
 	public static byte[] simpleLrpDecrypt(byte[] key, int cipherNum, byte[] counterBytes, byte[] encryptedData) {
-		return simpleLrpDecrypt(key, cipherNum, msbBytesToLong(counterBytes), encryptedData);
-	}
-
-	public static byte[] simpleLrpDecrypt(byte[] key, int cipherNum, long counter, byte[] encryptedData) {
-			return simpleLrpDecrypt(key, cipherNum, counter, 16, encryptedData);
+		return simpleLrpDecrypt(key, cipherNum, msbBytesToLong(counterBytes), counterBytes.length * 2, encryptedData);
 	}
 
 	public static byte[] simpleLrpDecrypt(byte[] key, int cipherNum, long counter, Integer counterSize, byte[] encryptedData) {

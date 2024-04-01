@@ -11,10 +11,14 @@ import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.Util;
 
 public class LRPCipher {
+	public static final int BLOCKSIZE_BYTES = 16;
+	public static final int BLOCKSIZE_BITS = BLOCKSIZE_BYTES * 8;
+	public static final int NIBBLE_BITS = 4;
+
 	LRPMultiCipher multiCipher;
 	byte[] key;
 	long counter = 0;
-	Integer counterSize = 8; // NOTE - the standard says that the counter size is variable, but testing says that it expects it to be fixed at 8 nibbles long
+	Integer counterSize = 8; // This is the number of **nibbles** in the counter. NOTE - the standard says that the counter size is variable, but testing says that it expects it to be fixed at 8 nibbles long, except for some SDM operations, which then go back and forth between 12 and 16.
 	LRPCMAC mac;
 
 	public LRPCipher(LRPMultiCipher multiCipher, byte[] key) {
@@ -31,7 +35,7 @@ public class LRPCipher {
 	int[] getCounterNibbles() {
 		LinkedList<Integer> nibbles = new LinkedList<>();
 
-        int mask = (1 << Constants.nibbleSize) - 1;
+        int mask = (1 << NIBBLE_BITS) - 1;
         long ctr = counter;
 
         while(true) {
@@ -74,19 +78,25 @@ public class LRPCipher {
         return y;
 	}
 
+	/**
+	 * Unpadded encryption/decryption of full 16-byte blocks.
+	 * @param src the material to encrypt/decrypt
+	 * @param cryptMode set to Cipher.DECRYPT_MODE or Cipher.ENCRYPT_MODE depending on purpose
+	 * @return
+	 */
 	public byte[] cryptFullBlocks(byte[] src, int cryptMode) {
 		// Algorithm 4 (pg. 7)
-        if((src.length % Constants.blockSize) != 0) {
+        if((src.length % BLOCKSIZE_BYTES) != 0) {
             throw new RuntimeException("Bad block size");
         }
 
         byte[] result = new byte[src.length];
-        int numBlocks = src.length / Constants.blockSize;
+        int numBlocks = src.length / BLOCKSIZE_BYTES;
         for(int i = 0; i < numBlocks; i++) {
-            int blockStart = Constants.blockSize * i;
+            int blockStart = BLOCKSIZE_BYTES * i;
             int[] x = getCounterNibbles();
             byte[] y = evalLRP(x, true);
-            byte[] block = Util.subArrayOf(src, blockStart, Constants.blockSize);
+            byte[] block = Util.subArrayOf(src, blockStart, BLOCKSIZE_BYTES);
             byte[] resultBlock = 
 				cryptMode == Cipher.ENCRYPT_MODE 
 					? Util.simpleAesEncrypt(y, block) 
@@ -99,33 +109,49 @@ public class LRPCipher {
         return result;
 	}
 
+	/**
+	 * Encrypts a source message.  Adds padding if needed to get a full block.
+	 * @param src
+	 * @return
+	 */
 	public byte[] encrypt(byte[] src) {
-		int fullBlocks = src.length / Constants.blockSize;
-        byte[] newSrc = new byte[(fullBlocks + 1) * Constants.blockSize];
+		int fullBlocks = src.length / BLOCKSIZE_BYTES;
+        byte[] newSrc = new byte[(fullBlocks + 1) * BLOCKSIZE_BYTES];
 		System.arraycopy(src, 0, newSrc, 0, src.length);
-        if((src.length % Constants.blockSize) == 0) {
-			System.arraycopy(Constants.fullPaddingBlock, 0, newSrc, newSrc.length - Constants.blockSize, Constants.fullPaddingBlock.length);
+        if((src.length % BLOCKSIZE_BYTES) == 0) {
+			System.arraycopy(Constants.fullPaddingBlock, 0, newSrc, newSrc.length - BLOCKSIZE_BYTES, Constants.fullPaddingBlock.length);
         } else {
-            newSrc[src.length] = (byte)0x80;
+            newSrc[src.length] = (byte)Constants.marker;
         }
         return cryptFullBlocks(newSrc, Cipher.ENCRYPT_MODE);
 	}
 
+	/**
+	 * Decrypt the given encryption message.  This assumes a padded message.
+	 * @param src
+	 * @return
+	 */
 	public byte[] decrypt(byte[] src) {
+		// Decrypt everything
 		byte[] result = cryptFullBlocks(src, Cipher.DECRYPT_MODE);
+
+		// Back up until you find the final marker
 		int lastIdx = result.length - 1;
 		while(result[lastIdx] != Constants.marker) {
 			lastIdx--;
 		}
+
+		// Return everything before that
 		return Util.subArrayOf(result, 0, lastIdx);
 	}
 
+	// 
 	public void setCounterSize(Integer sz) {
 		counterSize = sz;
 	}
 
 	public byte[] cmac(byte[] message) {
-		return mac.perform(message, 16);
+		return mac.perform(message, Constants.CMAC_SIZE);
 	}
 
 	public void setCounter(long counter) {

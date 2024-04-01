@@ -13,6 +13,10 @@ public class LRPMultiCipher {
 	byte[] key;
 	byte[][] plaintexts = new byte[16][];
 
+    public static final byte[] UPPER = new byte[] { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55 };
+	public static final byte[] LOWER = new byte[]  { (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa };
+
+
     /**
      * Generates a new MuliCipher based on the given key.
      * @param key
@@ -23,17 +27,17 @@ public class LRPMultiCipher {
 		// Algorithm 1 (pg. 5)
         byte[] h = Util.simpleAesEncrypt(
             key,
-            Constants.upper
+            UPPER
         );
 
 		for(int i = 0; i < 16; i++) {
 			plaintexts[i] = Util.simpleAesEncrypt(
                 h,
-                Constants.lower
+                LOWER
             );
             h = Util.simpleAesEncrypt(
                 h,
-                Constants.upper
+                UPPER
             );
 		}
 	}
@@ -47,18 +51,18 @@ public class LRPMultiCipher {
 		// Algorithm 2 (pg. 5)
         byte[] h = Util.simpleAesEncrypt(
             key,
-            Constants.lower
+            LOWER
         );
 
         for(int i = 0; i < idx; i++) {
             h = Util.simpleAesEncrypt(
                 h,
-                Constants.upper
+                UPPER
             );
         }
         byte[] newkey = Util.simpleAesEncrypt(
             h,
-            Constants.lower
+            LOWER
         );
 
         return new LRPCipher(this, newkey);

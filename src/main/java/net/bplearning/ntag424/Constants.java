@@ -5,13 +5,13 @@ import javax.crypto.spec.IvParameterSpec;
 public class Constants {
 	// ** Crypto Constants **
 	public static IvParameterSpec zeroIVPS = new IvParameterSpec(new byte[16]); // pg. 24
-	public static byte[] upper = new byte[] { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55 };
-	public static byte[] lower = new byte[]  { (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa, (byte)0xaa };
 	public static byte[] zeroBlock = new byte[16];
 	public static byte[] fullPaddingBlock = new byte[] { (byte)0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	public static byte marker = (byte)0x80;
-	public static int blockSize = 16;
-	public static int nibbleSize = 4;
+
+	/** The number of bytes in the CMAC **before** shortening */
+	public static final int CMAC_SIZE = 16;
+
 
 	public static boolean[] RB_128; static {
 		RB_128 = new boolean[128];

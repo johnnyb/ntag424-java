@@ -165,7 +165,7 @@ public class PiccData {
 
 	public byte[] performCMAC(byte[] message) {
 		CMAC cmac = usesLrp ? generateLRPCMAC(macFileKey) : generateAESCMAC(macFileKey);
-		byte[] result = cmac.perform(message, 16);
+		byte[] result = cmac.perform(message, Constants.CMAC_SIZE);
 		return result;
 	}
 
@@ -186,10 +186,9 @@ public class PiccData {
 				Util.getByte(readCounter, 2),
 				0, 0, 0
 			};
-			long newCounter = Util.msbBytesToLong(counterBytes);
 
 			byte[] sessionKey = generateLRPSessionKey(macFileKey);
-			return Util.simpleLrpDecrypt(sessionKey, 1, newCounter, 12, encryptedData);
+			return Util.simpleLrpDecrypt(sessionKey, 1, counterBytes, encryptedData);
 
 		} else {
 			return Util.simpleAesDecrypt(macFileKey, encryptedData);
