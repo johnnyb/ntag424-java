@@ -10,7 +10,7 @@ import net.bplearning.ntag424.sdm.PiccData;
 
 public class SdmTest {
 	@Test 
-	public void testSdm() {
+	public void testSdmLRPMac() {
 		byte[] uid = Util.hexToByte("04827F12647380");
 		int counter = 0x07;
 		byte[] key = Constants.FACTORY_KEY;
@@ -23,7 +23,7 @@ public class SdmTest {
 	}
 
 	@Test
-	public void testPICCEncryptionNoUid() {
+	public void testPICCEncryptionLRPNoUid() {
 		byte[] encryptedPiccData = Util.hexToByte("D99C1B274606743ECE77E01D0D46CCE69F00C0C246363639");
 		assertEquals(24, encryptedPiccData.length);
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, true);
@@ -35,7 +35,7 @@ public class SdmTest {
 	}
 
 	@Test
-	public void testPICCEncryption() {
+	public void testPICCEncryptionLRP() {
 		byte[] encryptedPiccData = Util.hexToByte("B3373525DC0343DEDB5F8E89F5387402EDFB8C22186FC129");
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, true);
 		piccData.setMacFileKey(Constants.FACTORY_KEY);
@@ -46,7 +46,7 @@ public class SdmTest {
 	}
 
 	@Test 
-	public void testFileEncrpytion() {
+	public void testFileEncrpytionLRP() {
 		byte[] encryptedPiccData = Util.hexToByte("4EED5D97131E60E6EA7C99DCC98FED49344896F16257DC6B");
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, true);
 		piccData.setMacFileKey(Constants.FACTORY_KEY);
@@ -58,7 +58,7 @@ public class SdmTest {
 	}
 
 	@Test
-	public void testFileEncryption2() {
+	public void testFileEncryption2LRP() {
 		byte[] encryptedPiccData = Util.hexToByte("B3EC473AD2BDB04A0B75065B8E775FEF2D08AD7E8D024DF2");
 		byte[] encryptedContent = Util.hexToByte("A8335B51B0A252AFEAFEEB38FCA0D810");
 		byte[] contentForMac = "A8335B51B0A252AFEAFEEB38FCA0D810/".getBytes();
@@ -71,6 +71,24 @@ public class SdmTest {
 		byte[] decryptedData = piccData.decryptFileData(encryptedContent);
 		byte[] expectedDecryptedData = new byte[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 		assertArrayEquals(expectedDecryptedData, decryptedData);
+		assertArrayEquals(expectedMac, piccData.performShortCMAC(contentForMac));
+	}
+
+	@Test
+	public void testFileEncryptionAES() {
+		byte[] encryptedPiccData = Util.hexToByte("379F7A361ED4728A13B70F2B591FFA6B");
+		byte[] encryptedContent = Util.hexToByte("A0DED1861CC740B47240AC0C944DC2EF");
+		byte[] contentForMac = "A0DED1861CC740B47240AC0C944DC2EF/".getBytes();
+		byte[] expectedMac = Util.hexToByte("4FF9720BC3FE5910");
+
+		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, false);
+		piccData.setMacFileKey(Constants.FACTORY_KEY);
+		assertEquals(0x01, piccData.readCounter);
+		assertArrayEquals(Util.hexToByte("04B07F12647380"), piccData.uid);
+		byte[] decryptedData = piccData.decryptFileData(encryptedContent);
+		System.out.println("DATA: " + Util.byteToHex(decryptedData));
+		// byte[] expectedDecryptedData = new byte[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+		// assertArrayEquals(expectedDecryptedData, decryptedData);
 		assertArrayEquals(expectedMac, piccData.performShortCMAC(contentForMac));
 	}
 }

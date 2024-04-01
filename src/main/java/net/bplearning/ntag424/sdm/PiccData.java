@@ -87,15 +87,33 @@ public class PiccData {
 		return cipher.cmac(sv);
 	}
 
-	public byte[] generateAESSessionMacKey(byte[] macKey) {
-		byte[] sv = generateAESSessionVector();
+	public byte[] generateAESSessionEncKey(byte[] macKey) {
+		// pg. 41
+		byte[] sv = generateAESEncSessionVector();
 		return Util.simpleAesCmac(macKey, sv);
 	}
 
-	public byte[] generateAESSessionVector() {
+	public byte[] generateAESSessionMacKey(byte[] macKey) {
+		// pg. 41
+		byte[] sv = generateAESMACSessionVector();
+		return Util.simpleAesCmac(macKey, sv);
+	}
+
+	public byte[] generateAESMACSessionVector() {
 		return generateSessionVector(new byte[] {
 			0x3c,
 			(byte)0xc3,
+			0x00,
+			0x01,
+			0x00,
+			(byte)0x80
+		}, null);
+	}
+
+	public byte[] generateAESEncSessionVector() {
+		return generateSessionVector(new byte[] {
+			(byte)0xc3,
+			0x3c,
 			0x00,
 			0x01,
 			0x00,
@@ -150,7 +168,7 @@ public class PiccData {
 
 	public CMAC generateAESCMAC(byte[] key) {
             try {
-				SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+				SecretKeySpec keySpec = new SecretKeySpec(generateAESSessionMacKey(key), "AES");
 
 				Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
 
@@ -191,7 +209,8 @@ public class PiccData {
 			return Util.simpleLrpDecrypt(sessionKey, 1, counterBytes, encryptedData);
 
 		} else {
-			return Util.simpleAesDecrypt(macFileKey, encryptedData);
+			byte[] sessionKey = generateAESSessionEncKey(macFileKey);
+			return Util.simpleAesDecrypt(sessionKey, encryptedData);
 		}
 	}
 }
