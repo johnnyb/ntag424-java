@@ -14,6 +14,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import net.bplearning.ntag424.aes.AESCMAC;
@@ -273,12 +274,15 @@ public final class Util {
     return jamCRC;
 	}
 
-
 	public static byte[] simpleAesEncrypt(byte[] key, byte[] data) {
+		return simpleAesEncrypt(key, data, Constants.zeroIVPS);
+	}
+
+	public static byte[] simpleAesEncrypt(byte[] key, byte[] data, IvParameterSpec iv) {
 		try {
 			Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
 			SecretKeySpec secretKey = new SecretKeySpec(key, "AES"); 
-			cipher.init(Cipher.ENCRYPT_MODE, secretKey, Constants.zeroIVPS);
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv);
 			return cipher.doFinal(data);
 		} catch(NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
 			// Should not happen
@@ -288,10 +292,14 @@ public final class Util {
 	}
 
 	public static byte[] simpleAesDecrypt(byte[] key, byte[] data) {
+		return simpleAesDecrypt(key, data, Constants.zeroIVPS);
+	}
+
+	public static byte[] simpleAesDecrypt(byte[] key, byte[] data, IvParameterSpec iv) {
 		try {
 			Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
 			SecretKeySpec secretKey = new SecretKeySpec(key, "AES"); 
-			cipher.init(Cipher.DECRYPT_MODE, secretKey, Constants.zeroIVPS);
+			cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
 			return cipher.doFinal(data);	
 		} catch(NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
 			// Should not happen

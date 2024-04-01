@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import net.bplearning.ntag424.CMAC;
@@ -210,7 +211,13 @@ public class PiccData {
 
 		} else {
 			byte[] sessionKey = generateAESSessionEncKey(macFileKey);
-			return Util.simpleAesDecrypt(sessionKey, encryptedData);
+			byte[] ivInput = new byte[16];
+			ivInput[0] = Util.getByte(readCounter, 0);
+			ivInput[1] = Util.getByte(readCounter, 1);
+			ivInput[2] = Util.getByte(readCounter, 2);
+			byte[] ivBytes = Util.simpleAesEncrypt(sessionKey, ivInput);
+			IvParameterSpec ivps = new IvParameterSpec(ivBytes);
+			return Util.simpleAesDecrypt(sessionKey, encryptedData, ivps);
 		}
 	}
 }

@@ -74,6 +74,36 @@ public class SdmTest {
 		assertArrayEquals(expectedMac, piccData.performShortCMAC(contentForMac));
 	}
 
+	@Test 
+	public void testSDMAESKeyGeneration() {
+		// From Pg. 10 of AN12196
+		byte[] uid = Util.hexToByte("04C767F2066180");
+		byte[] key = Util.hexToByte("5ACE7E50AB65D5D51FD5BF5A16B8205B");
+		int readCounter = 1;
+		PiccData piccData = new PiccData(uid, readCounter, false);
+		piccData.setMacFileKey(key);
+
+		byte[] expectedEncKey = Util.hexToByte("66DA61797E23DECA5D8ECA13BBADF7A9");
+		byte[] expectedMacKey = Util.hexToByte("3A3E8110E05311F7A3FCF0D969BF2B48");
+
+		assertArrayEquals(expectedEncKey, piccData.generateAESSessionEncKey(key));
+		assertArrayEquals(expectedMacKey, piccData.generateAESSessionMacKey(key));
+	}
+
+	@Test
+	public void testFileEncryptionAESFromFeaturesHints() {
+		// Pg. 14 AN12196
+		byte[] encryptedData = Util.hexToByte("94592FDE69FA06E8E3B6CA686A22842B");
+		byte[] uid = Util.hexToByte("04958CAA5C5E80");
+		byte[] key = Constants.FACTORY_KEY;
+		int readCounter = 1;
+		PiccData piccData = new PiccData(uid, readCounter, false);
+		piccData.setMacFileKey(key);
+		byte[] decrypedData = piccData.decryptFileData(encryptedData);
+		byte[] expectedDecryptedData = Util.hexToByte("78787878787878787878787878787878");
+		assertArrayEquals(expectedDecryptedData, decrypedData);
+	}
+
 	@Test
 	public void testFileEncryptionAES() {
 		byte[] encryptedPiccData = Util.hexToByte("379F7A361ED4728A13B70F2B591FFA6B");
@@ -86,9 +116,8 @@ public class SdmTest {
 		assertEquals(0x01, piccData.readCounter);
 		assertArrayEquals(Util.hexToByte("04B07F12647380"), piccData.uid);
 		byte[] decryptedData = piccData.decryptFileData(encryptedContent);
-		System.out.println("DATA: " + Util.byteToHex(decryptedData));
-		// byte[] expectedDecryptedData = new byte[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-		// assertArrayEquals(expectedDecryptedData, decryptedData);
+		byte[] expectedDecryptedData = new byte[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+		assertArrayEquals(expectedDecryptedData, decryptedData);
 		assertArrayEquals(expectedMac, piccData.performShortCMAC(contentForMac));
 	}
 }
