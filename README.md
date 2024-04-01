@@ -36,6 +36,10 @@ And it will produce a JAR file named `target/ntag424-VERSION.jar`.
 To install, just copy the JAR built in the previous section into your JAR folder.  
 For an Android project, this is usually in the `app/libs` directory.
 
+## Example Android project
+
+The `examples` directory has an Android project that uses this library.  It contains a built jar, but, if it ineeds updating, you can run `./copyjar.sh` out of that directory after doing an `mvn clean install` in the main directory to copy the new version in.
+
 ## Usage
 
 The intended usage of this library is within an Android project, though it is written so that it could be used with non-Android NFC hardware.
