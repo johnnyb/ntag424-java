@@ -161,9 +161,9 @@ Template pieces include:
 * `{PICC}`: Put the encrypted PICC data here (encrypted with sdmMetaReadPerm key).  If set, be sure to set usesLrp on the NDefMasterTemplate object (affects the size of the PICC data).
 * `{FILE}`: Put the encrypted secret data here (encrypted with sdmFileReadPerm key).  If set, be sure to set the fileDataLength of the NdefMasterTemplate object.
 * `{MAC}`: Put the MAC data here.
-* `^`: If set, this is the start of the location that will be used for MAC calculation.  If unset, it just becomes the locatin of the start of the MAC, indicating to only MAC the PICC data.
+* `^`: If set, this is the start of the location that will be used for MAC calculation.  If unset, it just becomes the location of the start of the MAC, indicating to only MAC the PICC data.  Or, if there is encrypted file data, it is set to be the start of the encrypted file data.
 
-Personally, I like to use `{UID}{COUNTER}` and `{MAC}` rather than `{PICC}` because, if there is a connection issue with the Internet, I at least know what UID my tag was wanting to be.
+Personally, I like to use `{UID}{COUNTER}` and `{MAC}` rather than `{PICC}` because, if there is a connection issue with the Internet, I at least know what UID my tag was wanting to be, even if I can't fully validate it.
 
 ## SDM Validation
 
