@@ -35,6 +35,21 @@ public class SdmTest {
 	}
 
 	@Test
+	public void testPICCEncryptionAES() {
+		byte[] encryptedPiccData = Util.hexToByte("84DC15E87593037C7DDA281C2D55B8F2");
+		byte[] expectedCmac = Util.hexToByte("4BBC218E7B2B36AF");
+		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, false);
+		byte[] expectedUid = Util.hexToByte("049f50824f1390");
+		int expectedReadCount = 33;
+
+		assertArrayEquals(expectedUid, piccData.uid);
+		assertEquals(expectedReadCount, piccData.readCounter);
+
+		piccData.setMacFileKey(Constants.FACTORY_KEY);
+		assertArrayEquals(expectedCmac, piccData.performShortCMAC(null));
+	}
+
+	@Test
 	public void testPICCEncryptionLRP() {
 		byte[] encryptedPiccData = Util.hexToByte("B3373525DC0343DEDB5F8E89F5387402EDFB8C22186FC129");
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, true);
