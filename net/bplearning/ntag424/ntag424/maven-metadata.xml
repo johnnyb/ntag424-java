@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>net.bplearning.ntag424</groupId>
+  <artifactId>ntag424</artifactId>
+  <versioning>
+    <versions>
+      <version>1.0-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20240406122031</lastUpdated>
+  </versioning>
+</metadata>
