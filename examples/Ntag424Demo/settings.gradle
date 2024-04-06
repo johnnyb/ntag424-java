@@ -10,6 +10,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url "https://raw.githubusercontent.com/johnnyb/ntag424-java/mvn-repo/"
+        }
     }
 }
 rootProject.name = "Ntag 424 Demo"
