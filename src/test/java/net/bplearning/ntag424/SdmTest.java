@@ -28,7 +28,7 @@ public class SdmTest {
 		assertEquals(24, encryptedPiccData.length);
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, true);
 		piccData.setMacFileKey(Constants.FACTORY_KEY);
-		assertEquals(0x1a, piccData.readCounter);
+		assertEquals(0x1a, piccData.getReadCounter());
 		byte[] expectedMac = Util.hexToByte("15CA6F05740D1AE2");
 		byte[] mac = piccData.performCMAC(new byte[0]);
 		//assertArrayEquals(expectedMac, mac);
@@ -42,8 +42,8 @@ public class SdmTest {
 		byte[] expectedUid = Util.hexToByte("049f50824f1390");
 		int expectedReadCount = 33;
 
-		assertArrayEquals(expectedUid, piccData.uid);
-		assertEquals(expectedReadCount, piccData.readCounter);
+		assertArrayEquals(expectedUid, piccData.getUid());
+		assertEquals(expectedReadCount, piccData.getReadCounter());
 
 		piccData.setMacFileKey(Constants.FACTORY_KEY);
 		assertArrayEquals(expectedCmac, piccData.performShortCMAC(null));
@@ -54,8 +54,8 @@ public class SdmTest {
 		byte[] encryptedPiccData = Util.hexToByte("B3373525DC0343DEDB5F8E89F5387402EDFB8C22186FC129");
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, true);
 		piccData.setMacFileKey(Constants.FACTORY_KEY);
-		assertEquals(0x1e, piccData.readCounter);
-		assertArrayEquals(Util.hexToByte("04827F12647380"), piccData.uid);
+		assertEquals(0x1e, piccData.getReadCounter());
+		assertArrayEquals(Util.hexToByte("04827F12647380"), piccData.getUid());
 		byte[] shortMacData = piccData.performShortCMAC(null);		
 		assertArrayEquals(Util.hexToByte("A3773D237775F892"), shortMacData);
 	}
@@ -65,8 +65,8 @@ public class SdmTest {
 		byte[] encryptedPiccData = Util.hexToByte("4EED5D97131E60E6EA7C99DCC98FED49344896F16257DC6B");
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, true);
 		piccData.setMacFileKey(Constants.FACTORY_KEY);
-		assertArrayEquals(Util.hexToByte("04827F12647380"), piccData.uid);
-		assertEquals(0x21, piccData.readCounter);
+		assertArrayEquals(Util.hexToByte("04827F12647380"), piccData.getUid());
+		assertEquals(0x21, piccData.getReadCounter());
 		byte[] decryptedData = piccData.decryptFileData(Util.hexToByte("0586F575D54AECF1586B1FE750E8C0AC"));
 		byte[] expectedDecryptedData = Util.hexToByte("2A2A2A2A2A2A2A2A2A2A2A2A2A2A2A2A");
 		assertArrayEquals(expectedDecryptedData, decryptedData);
@@ -81,12 +81,27 @@ public class SdmTest {
 
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, true);
 		piccData.setMacFileKey(Constants.FACTORY_KEY);
-		assertArrayEquals(Util.hexToByte("04827F12647380"), piccData.uid);
-		assertEquals(0x25, piccData.readCounter);
+		assertArrayEquals(Util.hexToByte("04827F12647380"), piccData.getUid());
+		assertEquals(0x25, piccData.getReadCounter());
 		byte[] decryptedData = piccData.decryptFileData(encryptedContent);
 		byte[] expectedDecryptedData = new byte[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 		assertArrayEquals(expectedDecryptedData, decryptedData);
 		assertArrayEquals(expectedMac, piccData.performShortCMAC(contentForMac));
+	}
+
+	// Class for exposing protected methods for testing purposes
+	static class PiccDataForTesting extends PiccData {
+		public PiccDataForTesting(byte[] uid, int counter, boolean usesLRP) { 
+			super(uid, counter, usesLRP);
+		}
+		
+		public byte[] generateAESSessionEncKeyForTesting(byte[] key) {
+			return generateAESSessionEncKey(key);
+		}
+
+		public byte[] generateAESSessionMacKeyForTesting(byte[] key) {
+			return generateAESSessionMacKey(key);
+		}
 	}
 
 	@Test 
@@ -95,14 +110,14 @@ public class SdmTest {
 		byte[] uid = Util.hexToByte("04C767F2066180");
 		byte[] key = Util.hexToByte("5ACE7E50AB65D5D51FD5BF5A16B8205B");
 		int readCounter = 1;
-		PiccData piccData = new PiccData(uid, readCounter, false);
+		PiccDataForTesting piccData = new PiccDataForTesting(uid, readCounter, false);
 		piccData.setMacFileKey(key);
 
 		byte[] expectedEncKey = Util.hexToByte("66DA61797E23DECA5D8ECA13BBADF7A9");
 		byte[] expectedMacKey = Util.hexToByte("3A3E8110E05311F7A3FCF0D969BF2B48");
 
-		assertArrayEquals(expectedEncKey, piccData.generateAESSessionEncKey(key));
-		assertArrayEquals(expectedMacKey, piccData.generateAESSessionMacKey(key));
+		assertArrayEquals(expectedEncKey, piccData.generateAESSessionEncKeyForTesting(key));
+		assertArrayEquals(expectedMacKey, piccData.generateAESSessionMacKeyForTesting(key));
 	}
 
 	@Test
@@ -128,8 +143,8 @@ public class SdmTest {
 
 		PiccData piccData = PiccData.decodeFromEncryptedBytes(encryptedPiccData, Constants.FACTORY_KEY, false);
 		piccData.setMacFileKey(Constants.FACTORY_KEY);
-		assertEquals(0x01, piccData.readCounter);
-		assertArrayEquals(Util.hexToByte("04B07F12647380"), piccData.uid);
+		assertEquals(0x01, piccData.getReadCounter());
+		assertArrayEquals(Util.hexToByte("04B07F12647380"), piccData.getUid());
 		byte[] decryptedData = piccData.decryptFileData(encryptedContent);
 		byte[] expectedDecryptedData = new byte[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 		assertArrayEquals(expectedDecryptedData, decryptedData);

@@ -1,0 +1,97 @@
+package net.bplearning.ntag424.card;
+
+import java.io.IOException;
+
+import net.bplearning.ntag424.Constants;
+import net.bplearning.ntag424.DnaCommunicator;
+import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.sdm.PiccData;
+
+/**
+ * This class manages a full keyset for your application.
+ * Any key not explicitly set is set to the FACTORY_KEY.
+ */
+public class KeySet {
+	protected KeyInfo[] keys = new KeyInfo[] {
+		new KeyInfo(),
+		new KeyInfo(),
+		new KeyInfo(), 
+		new KeyInfo(),
+		new KeyInfo()
+	};
+	protected boolean usesLrp = false;
+	protected int metaKey = Constants.ACCESS_KEY2;
+	protected int macFileKey = Constants.ACCESS_KEY3;
+
+	/**
+	 * This is a helper function to synchronize all of the
+	 * keys on a card to their current version.
+	 */
+	public boolean synchronizeKeys(DnaCommunicator comm) throws IOException {
+		boolean wasSuccessful = true;
+		for(int i = 0; i < keys.length; i++) {
+			if(!keys[i].synchronizeKey(comm, i)) {
+				wasSuccessful = false;
+			}
+		}
+		return wasSuccessful;
+	}
+
+	/**
+	 * Helper function to decode plain PICC data that is encoded as individual strings.
+	 */
+	public PiccData decodePiccData(String uidString, String readCounterString) {
+		PiccData piccData = new PiccData(Util.hexToByte(uidString), (int)Util.msbBytesToLong(Util.hexToByte(readCounterString)), usesLrp);
+		setMacFileKeyFor(piccData);
+		return piccData;
+	}
+
+	/**
+	 * Combines decoding and verifying into one step for the most common case.
+	 * Returns null if the verification did not work correctly.
+	 */
+	public PiccData decodeAndVerifyPiccData(String uidString, String readCounterString, String macString) {
+		PiccData piccData = keys[macFileKey].decodeAndVerifyMac(uidString, readCounterString, macString, usesLrp);
+		setMacFileKeyFor(piccData);
+		return piccData;
+	}
+
+	/**
+	 * Decrypts the given encrypted (as a hex string) PICC data.
+	 * If the access rights for the PICC are set to ACCESS_EVERYONE,
+	 * then it simply decodes the PICC data as unencrypted bytes.
+	 */
+	public PiccData decryptPiccData(String encryptedPiccData) {
+		PiccData piccData;
+		if(metaKey == Constants.ACCESS_EVERYONE) {
+			piccData = PiccData.decodeFromBytes(Util.hexToByte(encryptedPiccData), usesLrp);
+		} else {
+			piccData = PiccData.decodeFromEncryptedBytes(Util.hexToByte(encryptedPiccData), keys[metaKey].key, usesLrp);
+		}
+		setMacFileKeyFor(piccData);
+		return piccData;
+	}
+
+	/**
+	 * Convenience function for generating and setting the MAC
+	 * file key.  Doesn't do anything if the macFileKey is
+	 * set to a non-key value.  Doesn't do anything if piccData
+	 * is null.
+	 */
+	public void setMacFileKeyFor(PiccData piccData) {
+		if(piccData == null) { return; }
+		if(macFileKey >= Constants.ACCESS_KEY0 && macFileKey <= Constants.ACCESS_KEY4) {
+			piccData.setMacFileKey(keys[macFileKey].generateKeyForCardUid(piccData.getUid()));
+		}
+	}
+
+	// *** Getters and Setters *** //
+	public void setKey(int keyNumber, KeyInfo keyInfo) { keys[keyNumber] = keyInfo; }
+	public KeyInfo getKey(int keyNumber) { return keys[keyNumber]; }
+	public boolean getUsesLrp() { return this.usesLrp; }
+	public void setUsesLrp(boolean usesLrp) { this.usesLrp = usesLrp; }
+	public int getMacFileKey(){ return this.macFileKey; }
+	public void setMacFileKey(int macFileKey) { this.macFileKey = macFileKey; }
+	public int getMetaKey(){ return metaKey; }
+	public void setMetaKey(int metaKey) { this.metaKey = metaKey; }
+}

@@ -4,7 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 
 import org.junit.Test;
 
-import net.bplearning.ntag424.command.KeyInfo;
+import net.bplearning.ntag424.card.KeyInfo;
 
 public class KeyInfoTest {
 	@Test

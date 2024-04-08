@@ -20,9 +20,9 @@ import net.bplearning.ntag424.lrp.LRPCipher;
 import net.bplearning.ntag424.lrp.LRPMultiCipher;
 
 public class PiccData {
-	public byte[] uid;
-	public int readCounter;
-	public boolean usesLrp;
+	byte[] uid;
+	int readCounter;
+	boolean usesLrp;
 	byte[] macFileKey;
 
 	public PiccData(byte[] uid, int readCounter, boolean usesLrp) {
@@ -80,7 +80,25 @@ public class PiccData {
 		return decodeFromBytes(alldata, usesLrp);
 	}
 
-	public byte[] generateLRPSessionKey(byte[] macKey) {
+	/**
+	 * This is an all-in-one function for the most common
+	 * case - having a UID, COUNTER, and MAC string (likely
+	 * from URL parameters) and decoding it into a PiccData
+	 * object.  This returns null if the MAC does not verify.
+	 */
+	public static PiccData decodeAndVerifyMac(String uidString, String readCounterString, String macString, byte[] macFileKey, boolean usesLrp) {
+		PiccData piccData = new PiccData(Util.hexToByte(uidString), (int)Util.msbBytesToLong(Util.hexToByte(readCounterString)), usesLrp);
+		piccData.setMacFileKey(macFileKey);
+		byte[] expectedMac = piccData.performShortCMAC(null);
+		byte[] actualMac = Util.hexToByte(macString);
+		if(Util.arraysEqual(expectedMac, actualMac)) {
+			return piccData;
+		} else {
+			return null;
+		}
+	}
+
+	protected byte[] generateLRPSessionKey(byte[] macKey) {
 		// Pg. 42
 		LRPMultiCipher multiCipher = new LRPMultiCipher(macKey);
 		LRPCipher cipher = multiCipher.generateCipher(0);
@@ -88,19 +106,19 @@ public class PiccData {
 		return cipher.cmac(sv);
 	}
 
-	public byte[] generateAESSessionEncKey(byte[] macKey) {
+	protected byte[] generateAESSessionEncKey(byte[] macKey) {
 		// pg. 41
 		byte[] sv = generateAESEncSessionVector();
 		return Util.simpleAesCmac(macKey, sv);
 	}
 
-	public byte[] generateAESSessionMacKey(byte[] macKey) {
+	protected byte[] generateAESSessionMacKey(byte[] macKey) {
 		// pg. 41
 		byte[] sv = generateAESMACSessionVector();
 		return Util.simpleAesCmac(macKey, sv);
 	}
 
-	public byte[] generateAESMACSessionVector() {
+	protected byte[] generateAESMACSessionVector() {
 		return generateSessionVector(new byte[] {
 			0x3c,
 			(byte)0xc3,
@@ -111,7 +129,7 @@ public class PiccData {
 		}, null);
 	}
 
-	public byte[] generateAESEncSessionVector() {
+	protected byte[] generateAESEncSessionVector() {
 		return generateSessionVector(new byte[] {
 			(byte)0xc3,
 			0x3c,
@@ -122,7 +140,7 @@ public class PiccData {
 		}, null);
 	}
 
-	public byte[] generateSessionVector(byte[] prefix, byte[] suffix) {				
+	protected byte[] generateSessionVector(byte[] prefix, byte[] suffix) {				
 		// pg. 42
 		byte[] sv = new byte[16];
 		System.arraycopy(prefix, 0, sv, 0, prefix.length);
@@ -149,7 +167,7 @@ public class PiccData {
 		return sv;
 	}
 
-	public byte[] generateLRPSessionVector() {
+	protected byte[] generateLRPSessionVector() {
 		return generateSessionVector(new byte[]{ 
 			0x00, 
 			0x01,
@@ -161,13 +179,13 @@ public class PiccData {
 		});
 	}
 
-	public CMAC generateLRPCMAC(byte[] key) {
+	protected CMAC generateLRPCMAC(byte[] key) {
 		LRPMultiCipher multiCipher = new LRPMultiCipher(generateLRPSessionKey(key));
 		LRPCipher cipher = multiCipher.generateCipher(0);
 		return new LRPCMAC(cipher);
 	}
 
-	public CMAC generateAESCMAC(byte[] key) {
+	protected CMAC generateAESCMAC(byte[] key) {
             try {
 				SecretKeySpec keySpec = new SecretKeySpec(generateAESSessionMacKey(key), "AES");
 
@@ -220,4 +238,11 @@ public class PiccData {
 			return Util.simpleAesDecrypt(sessionKey, encryptedData, ivps);
 		}
 	}
+
+	/** Returns the UID of the card as a byte array */
+	public byte[] getUid() { return uid; }
+	/** Returns the card's read counter */
+	public int getReadCounter() { return readCounter; }
+	/** Returns the UID as a String.  This is also helpful if you want to be sure you have a normalized version of the UID. */
+	public String getUidString() { return Util.byteToHex(uid); }
 }

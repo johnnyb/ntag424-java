@@ -8,7 +8,11 @@ import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.exception.ProtocolException;
 
 public class ChangeKey {
-	public void run(DnaCommunicator communicator, int keyNum, byte[] oldKey, byte[] newKey, int keyVersion) throws IOException {
+    // FIXME - need to change this to a boolean, but I don't know which result param means "bad old key".  9E?
+    /**
+     * Changes the given key.  If keyNum is 0, oldKey can be null.
+     */
+	public static void run(DnaCommunicator communicator, int keyNum, byte[] oldKey, byte[] newKey, int keyVersion) throws IOException {
 		if(communicator.getActiveKeyNumber() != 0) {
             throw new ProtocolException("Can only change keys from key 0");
         }

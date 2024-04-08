@@ -6,7 +6,7 @@
 
   <groupId>net.bplearning.ntag424</groupId>
   <artifactId>ntag424</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>ntag424</name>
   <url>http://www.bplearning.net/</url>
