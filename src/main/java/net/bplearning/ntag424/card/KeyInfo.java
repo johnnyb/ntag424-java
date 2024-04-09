@@ -42,7 +42,7 @@ public class KeyInfo {
 	public List<KeyInfo> oldKeys = new LinkedList<>();
 
 	/** Whether or not to diversify keys */
-	public boolean diversifyKeys = true;
+	public boolean diversifyKeys = false;
 
 	/** The current key version */
 	public int version = 0;

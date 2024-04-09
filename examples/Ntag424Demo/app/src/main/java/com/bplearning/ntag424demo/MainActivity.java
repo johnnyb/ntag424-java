@@ -7,7 +7,6 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
-import android.nfc.tech.NfcA;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -25,21 +24,18 @@ import com.bplearning.ntag424demo.databinding.ActivityMainBinding;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import net.bplearning.ntag424.CommunicationMode;
 import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.DnaCommunicator;
 import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.card.KeyInfo;
+import net.bplearning.ntag424.card.KeySet;
 import net.bplearning.ntag424.command.ChangeFileSettings;
 import net.bplearning.ntag424.command.FileSettings;
 import net.bplearning.ntag424.command.GetCardUid;
 import net.bplearning.ntag424.command.GetFileSettings;
 import net.bplearning.ntag424.command.GetKeyVersion;
-import net.bplearning.ntag424.command.ReadData;
-import net.bplearning.ntag424.command.SetCapabilities;
 import net.bplearning.ntag424.command.WriteData;
 import net.bplearning.ntag424.encryptionmode.AESEncryptionMode;
-import net.bplearning.ntag424.encryptionmode.LRPEncryptionMode;
-import net.bplearning.ntag424.exception.ProtocolException;
 import net.bplearning.ntag424.sdm.NdefTemplateMaster;
 import net.bplearning.ntag424.sdm.SDMSettings;
 
@@ -203,6 +199,54 @@ public class MainActivity extends AppCompatActivity {
         Log.d(LOG_TAG, "Tag Tech: " + String.join(", ", tag.getTechList()));
     }
 
+    public KeySet getKeySet() {
+        // NOTE - replace these with your own keys.
+        //
+        //        Any of the keys *can* be diversified
+        //        if you don't use RandomID, but usually
+        //        only the MAC key is diversified.
+
+        KeySet keySet = new KeySet();
+        keySet.setUsesLrp(false);
+
+        // This is the "master" key
+        KeyInfo key0 = new KeyInfo();
+        key0.diversifyKeys = false;
+        key0.key = Constants.FACTORY_KEY;
+        keySet.setKey(Constants.ACCESS_KEY0, key0);
+
+        // No standard usage
+        KeyInfo key1 = new KeyInfo();
+        key1.diversifyKeys = false;
+        key1.key = Constants.FACTORY_KEY;
+        keySet.setKey(Constants.ACCESS_KEY1, key1);
+
+        // Usually used as a meta read key for encrypted PICC data
+        KeyInfo key2 = new KeyInfo();
+        key2.diversifyKeys = false;
+        key2.key = Constants.FACTORY_KEY;
+        keySet.setKey(Constants.ACCESS_KEY2, key2);
+
+        // Usually used as the MAC and encryption key.
+        // The MAC key usually has the diversification information setup.
+        KeyInfo key3 = new KeyInfo();
+        key3.diversifyKeys = true;
+        key3.systemIdentifier = new byte[] { 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67 }; // systemIdentifier is usually a hex-encoded string.  Here, it is "testing".
+        key3.key = Constants.FACTORY_KEY;
+
+        // No standard usage
+        keySet.setKey(Constants.ACCESS_KEY3, key3);
+        KeyInfo key4 = new KeyInfo();
+        key4.diversifyKeys = false;
+        key4.key = Constants.FACTORY_KEY;
+        keySet.setKey(Constants.ACCESS_KEY4, key4);
+
+        // This is used for decoding, but documenting that key2/key3 are standard for meta and mac
+        keySet.setMetaKey(Constants.ACCESS_KEY2);
+        keySet.setMacFileKey(Constants.ACCESS_KEY3);
+
+        return keySet;
+    }
 
     // This is the nitty-gritty
     public void communicateWithTag(Tag tag) {
@@ -231,6 +275,9 @@ public class MainActivity extends AppCompatActivity {
                     int keyVersion = GetKeyVersion.run(communicator, 0);
                     Log.d(LOG_TAG, "Key 0 version: " + keyVersion);
 
+                    KeySet keySet = getKeySet();
+                    keySet.synchronizeKeys(communicator);
+
                     // Doing this will set LRP mode for all future authentications
                     // SetCapabilities.run(communicator, true);
 
@@ -242,7 +289,6 @@ public class MainActivity extends AppCompatActivity {
                     byte[] secretData = new byte[] {
                             1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
                     };
-
 
                     // Set the access keys and options
                     SDMSettings sdmSettings = new SDMSettings();
