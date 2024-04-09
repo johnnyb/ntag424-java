@@ -80,13 +80,25 @@ public class KeyInfo {
 		}
 
 		boolean wasSuccessful = false;
+
 		for(KeyInfo key: oldKeys) {
 			byte[] oldCardKey = key.generateKeyForCardUid(uid);
 			try {
 				ChangeKey.run(comm, keyNum, oldCardKey, cardKey, version);
 				wasSuccessful = true;
+				break;
 			} catch (ProtocolException e) {
 				// Probably just an invalid old key
+			}
+		}
+
+		// No success so far, try to change from a factory key
+		if(!wasSuccessful) {
+			try {
+				ChangeKey.run(comm, keyNum, Constants.FACTORY_KEY, cardKey, version);
+				wasSuccessful = true;
+			} catch(ProtocolException e) {
+				// Still not successful
 			}
 		}
 		return wasSuccessful;
