@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import net.bplearning.ntag424.command.IsoSelectFile;
 import net.bplearning.ntag424.encryptionmode.EncryptionMode;
+import net.bplearning.ntag424.encryptionmode.LRPEncryptionMode;
 import net.bplearning.ntag424.exception.MACValidationException;
 import net.bplearning.ntag424.exception.ProtocolException;
 
@@ -240,4 +241,13 @@ public class DnaCommunicator {
 				return nxpPlainCommand(cmd, hdr, data);
 		}
     }
+
+	/** Get the currently active encryption mode */
+	public EncryptionMode getEncryptionMode() { 
+		return encryptionMode;
+	}
+
+	public boolean isUsingLRP() {
+		return encryptionMode instanceof LRPEncryptionMode;
+	}
 }

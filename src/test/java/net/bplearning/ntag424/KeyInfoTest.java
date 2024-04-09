@@ -13,6 +13,7 @@ public class KeyInfoTest {
 		KeyInfo keyInfo = new KeyInfo();
 		keyInfo.systemIdentifier = Util.hexToByte("4E585020416275");
 		keyInfo.key = Util.hexToByte("00112233445566778899AABBCCDDEEFF");
+		keyInfo.diversifyKeys = true;
 		byte[] cardUid = Util.hexToByte("04782E21801D80");
 		byte[] cardKey = keyInfo.generateKeyForCardUid(cardUid);
 		byte[] expectedCardKey = Util.hexToByte("A8DD63A3B89D54B37CA802473FDA9175");

@@ -25,7 +25,8 @@ public class KeySet {
 
 	/**
 	 * This is a helper function to synchronize all of the
-	 * keys on a card to their current version.
+	 * keys on a card to their current version.  Does not 
+	 * change key 0.
 	 */
 	public boolean synchronizeKeys(DnaCommunicator comm) throws IOException {
 		boolean wasSuccessful = true;
