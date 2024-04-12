@@ -30,6 +30,11 @@ public class AESEncryptionMode implements EncryptionMode {
     protected SecretKeySpec sessionMacKey;
 	protected byte[] rndA;
 	protected byte[] rndB;
+
+    // Only needed for restarting session
+    protected byte[] authenticationKey;
+    protected int authenticationKeyNum;
+    
 	public AESEncryptionMode(DnaCommunicator communicator, SecretKeySpec key, byte[] rndA, byte[] rndB) {
 		this.communicator = communicator;
 		this.key = key;
@@ -178,6 +183,9 @@ public class AESEncryptionMode implements EncryptionMode {
             }
     
             AESEncryptionMode encryptionMode = new AESEncryptionMode(communicator, key, a, b);
+            encryptionMode.authenticationKey = keyData;
+            encryptionMode.authenticationKeyNum = keyNum;
+
             communicator.startEncryptedSession(encryptionMode, keyNum, 0, ti);
             return true;
         } catch(BadPaddingException | IllegalBlockSizeException | InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidParameterException e) {
@@ -185,7 +193,11 @@ public class AESEncryptionMode implements EncryptionMode {
         }
     }
 
-    public void restartSession() {
+    public void restartSession(DnaCommunicator comm) throws IOException {
+        AESEncryptionMode.authenticateEV2(comm, authenticationKeyNum, authenticationKey);
+    }
+
+    public void restartSessionNonFirst(DnaCommunicator comm) throws IOException {
         // FIXME - run authenticateEV2NonFirst (pgs. 25 & 51)
     }
 

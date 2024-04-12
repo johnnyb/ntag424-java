@@ -80,6 +80,14 @@ public class DnaCommunicator {
 		this.commandCounter = commandCounter;
 		this.activeTransactionIdentifier = transactionIdentifier;
 	}
+
+	public void restartSession() throws IOException {
+		encryptionMode.restartSession(this);
+	}
+
+	public void restartSessionNonFirst() throws IOException {
+		// Not implemented
+	}
 	
 	// **** BASIC COMMAND ARCHITECTURE **** //
 

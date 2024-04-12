@@ -1,7 +1,6 @@
 package net.bplearning.ntag424.card;
 
 import java.io.IOException;
-import java.net.ProtocolException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -18,6 +17,7 @@ import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.aes.AESCMAC;
 import net.bplearning.ntag424.command.ChangeKey;
 import net.bplearning.ntag424.command.GetCardUid;
+import net.bplearning.ntag424.exception.ProtocolException;
 import net.bplearning.ntag424.sdm.PiccData;
 
 /**
@@ -71,6 +71,7 @@ public class KeyInfo {
 	 */
 	public boolean synchronizeKey(DnaCommunicator comm, int keyNum) throws IOException {
 		byte[] uid = GetCardUid.run(comm);
+		System.out.println("Getting card uid");
 		byte[] cardKey = generateKeyForCardUid(uid);
 
 		if(keyNum == 0) {
@@ -78,12 +79,18 @@ public class KeyInfo {
 			ChangeKey.run(comm, keyNum, null, cardKey, version);
 			return true;
 		}
+		
+		List<KeyInfo> keysToTry = new LinkedList<>(oldKeys);
+		keysToTry.add(new KeyInfo()); // factory key
+		keysToTry.add(this); // If the key is already set, just change it to itself
 
 		boolean wasSuccessful = false;
-
-		for(KeyInfo key: oldKeys) {
+		for(KeyInfo key: keysToTry) {
 			byte[] oldCardKey = key.generateKeyForCardUid(uid);
 			try {
+				System.out.println("Syncing key: " + keyNum);
+				System.out.println("Old: " + Util.byteToHex(oldCardKey));
+				System.out.println("To:" + Util.byteToHex(cardKey));
 				ChangeKey.run(comm, keyNum, oldCardKey, cardKey, version);
 				wasSuccessful = true;
 				break;
@@ -92,15 +99,6 @@ public class KeyInfo {
 			}
 		}
 
-		// No success so far, try to change from a factory key
-		if(!wasSuccessful) {
-			try {
-				ChangeKey.run(comm, keyNum, Constants.FACTORY_KEY, cardKey, version);
-				wasSuccessful = true;
-			} catch(ProtocolException e) {
-				// Still not successful
-			}
-		}
 		return wasSuccessful;
 	}
 

@@ -28,16 +28,8 @@ public class ChangeKey {
             );
 			result.throwUnlessSuccessful();
 
-            // Re-authenticate
-            if(communicator.isUsingLRP()) {
-                if(!LRPEncryptionMode.authenticateLRP(communicator, keyNum, newKey)) {
-                    throw new ProtocolException("Unable to reauthenticate");
-                }
-            } else {
-                if(!AESEncryptionMode.authenticateEV2(communicator, keyNum, newKey)) {
-                    throw new ProtocolException("Unable to reauthenticate");
-                }
-            }
+            // Success!  Need to restart authentication
+            communicator.restartSession();
         } else {
             byte[] crc = Util.jamCrc32(newKey);
             byte[] xorkey = Util.xor(oldKey, newKey);

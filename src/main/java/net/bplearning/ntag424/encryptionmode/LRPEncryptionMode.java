@@ -15,6 +15,10 @@ public class LRPEncryptionMode implements EncryptionMode {
 	LRPCipher sessionLrpMacCipher;
 	LRPCipher sessionLrpEncryptionCipher;
 
+	// Only needed for restarting session
+	protected byte[] authenticationKey;
+	protected int authenticationKeyNum;
+
 	public LRPEncryptionMode(DnaCommunicator communicator, LRPMultiCipher initialMultiCipher, byte[] rndA, byte[] rndB) {
 		byte[] sessionKey = generateLRPSessionKey(initialMultiCipher, rndA, rndB);
 		sessionMultiCipher = new LRPMultiCipher(sessionKey);
@@ -41,7 +45,13 @@ public class LRPEncryptionMode implements EncryptionMode {
 		return sessionLrpMacCipher.cmac(message);
 	}
 
-	public void restartSession() {
+	@Override
+	public void restartSession(DnaCommunicator comm) throws IOException {
+		LRPEncryptionMode.authenticateLRP(comm, authenticationKeyNum, authenticationKey);
+	}
+
+	@Override
+	public void restartSessionNonFirst(DnaCommunicator comm) throws IOException {
 		// FIXME - implement authenticateLRPNonFirst
 	}
 
@@ -91,6 +101,8 @@ public class LRPEncryptionMode implements EncryptionMode {
 
 	   LRPMultiCipher initialMultiCipher = new LRPMultiCipher(keyData);
 	   LRPEncryptionMode lrpMode = new LRPEncryptionMode(communicator, initialMultiCipher, rndA, rndB);
+	   lrpMode.authenticationKey = keyData;
+	   lrpMode.authenticationKeyNum = keyNum;
 
 	   // STAGE 2 Authentication (pg. 52)
 	   byte[] rndMac = lrpMode.generateMac(Util.combineByteArrays(rndA, rndB));
