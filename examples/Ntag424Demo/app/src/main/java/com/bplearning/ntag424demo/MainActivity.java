@@ -23,6 +23,7 @@ import com.bplearning.ntag424demo.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.DnaCommunicator;
@@ -56,18 +57,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
-
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
     }
 
     // Boilerplate - ignore
@@ -92,14 +81,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    // Boilerplate - ignore
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
     }
 
     // This one is important - register for NFC intents when the screen is active
@@ -232,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
         KeyInfo key3 = new KeyInfo();
         key3.diversifyKeys = true;
         key3.systemIdentifier = new byte[] { 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67 }; // systemIdentifier is usually a hex-encoded string.  Here, it is "testing".
+        key3.version = 1; // Since it is not a factory key (it is *based* on a factory key, but underwent diversification), need to set to a version number other than 1.
         key3.key = Constants.FACTORY_KEY;
 
         // No standard usage
@@ -292,15 +274,18 @@ public class MainActivity extends AppCompatActivity {
 
                     // Set the access keys and options
                     SDMSettings sdmSettings = new SDMSettings();
-                    sdmSettings.sdmMetaReadPerm = Constants.ACCESS_KEY2; // Set to a key to get encrypted PICC data
-                    sdmSettings.sdmFileReadPerm = Constants.ACCESS_KEY2;     // Used to create the MAC and Encrypt FileData
+                    sdmSettings.sdmMetaReadPerm = Constants.ACCESS_KEY2;     // Set to a key to get encrypted PICC data (usually non-diversified since you don't know the UID until after decryption)
+                    sdmSettings.sdmFileReadPerm = Constants.ACCESS_KEY3;     // Used to create the MAC and Encrypt FileData
                     sdmSettings.sdmOptionUid = true;
                     sdmSettings.sdmOptionReadCounter = true;
 
                     // NDEF SDM formatter helper - uses a template to write SDMSettings and get file data
                     NdefTemplateMaster master = new NdefTemplateMaster();
                     master.usesLRP = false;
+
                     byte[] ndefRecord = master.generateNdefTemplateFromUrlString("https://www.example.com/{PICC}/{FILE}/{MAC}", secretData, sdmSettings);
+                    // This link (not by me) has a handy decoder if you are using factory keys (we are using a diversified factory key, so this will not work unless you change that in the keyset):
+                    // byte[] ndefRecord = master.generateNdefTemplateFromUrlString("https://sdm.nfcdeveloper.com/tagpt?uid={UID}&ctr={COUNTER}&cmac={MAC}", sdmSettings);
 
                     // Write the record to the file
                     WriteData.run(communicator, Constants.NDEF_FILE_NUMBER, ndefRecord);
@@ -313,8 +298,15 @@ public class MainActivity extends AppCompatActivity {
                     ndeffs.sdmSettings = sdmSettings; // Use the SDM settings we just setup
                     Log.d(LOG_TAG, "New Ndef Settings: " + debugStringForFileSettings(ndeffs));
                     ChangeFileSettings.run(communicator, Constants.NDEF_FILE_NUMBER, ndeffs);
+
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "Tag Sync Successful", Toast.LENGTH_SHORT).show();
+                    });
                 } else {
                     Log.d(LOG_TAG, "Login unsuccessful");
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "Invalid Application Key", Toast.LENGTH_SHORT).show();
+                    });
                 }
 
                 // We are done
@@ -322,6 +314,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(LOG_TAG, "Disconnected from tag");
             } catch (IOException e) {
                 Log.d(LOG_TAG, "error communicating", e);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Error Communicating: Try again", Toast.LENGTH_SHORT).show();
+                });
             }
         }).start();
     }
