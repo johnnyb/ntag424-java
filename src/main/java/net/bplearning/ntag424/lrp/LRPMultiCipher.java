@@ -1,7 +1,6 @@
 package net.bplearning.ntag424.lrp;
 
-import net.bplearning.ntag424.Constants;
-import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.util.Crypto;
 
 /**
  * An LRP (leakage-resistance primitive) MultiCipher based on 
@@ -25,17 +24,17 @@ public class LRPMultiCipher {
 		this.key = key;
 		
 		// Algorithm 1 (pg. 5)
-        byte[] h = Util.simpleAesEncrypt(
+        byte[] h = Crypto.simpleAesEncrypt(
             key,
             UPPER
         );
 
 		for(int i = 0; i < 16; i++) {
-			plaintexts[i] = Util.simpleAesEncrypt(
+			plaintexts[i] = Crypto.simpleAesEncrypt(
                 h,
                 LOWER
             );
-            h = Util.simpleAesEncrypt(
+            h = Crypto.simpleAesEncrypt(
                 h,
                 UPPER
             );
@@ -49,18 +48,18 @@ public class LRPMultiCipher {
 	 */
 	public LRPCipher generateCipher(int idx) {
 		// Algorithm 2 (pg. 5)
-        byte[] h = Util.simpleAesEncrypt(
+        byte[] h = Crypto.simpleAesEncrypt(
             key,
             LOWER
         );
 
         for(int i = 0; i < idx; i++) {
-            h = Util.simpleAesEncrypt(
+            h = Crypto.simpleAesEncrypt(
                 h,
                 UPPER
             );
         }
-        byte[] newkey = Util.simpleAesEncrypt(
+        byte[] newkey = Crypto.simpleAesEncrypt(
             h,
             LOWER
         );

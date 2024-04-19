@@ -14,12 +14,12 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import net.bplearning.ntag424.CommandResult;
-import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.aes.AESCMAC;
 import net.bplearning.ntag424.exception.DelayException;
 import net.bplearning.ntag424.exception.EncryptionException;
+import net.bplearning.ntag424.util.ByteUtil;
+import net.bplearning.ntag424.util.Crypto;
 
 public class AESEncryptionMode implements EncryptionMode {
     static final int BLOCKSIZE_BYTES = 16;
@@ -57,18 +57,18 @@ public class AESEncryptionMode implements EncryptionMode {
             transactionIdentifier[1],
             transactionIdentifier[2],
             transactionIdentifier[3],
-            Util.getByte(commandCounter, 0), 
-            Util.getByte(commandCounter, 1),
+            ByteUtil.getByteLSB(commandCounter, 0),
+            ByteUtil.getByteLSB(commandCounter, 1),
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         };
 
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, sessionEncryptionKey, Constants.zeroIVPS);
+            cipher.init(Cipher.ENCRYPT_MODE, sessionEncryptionKey, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
             byte[] ivdata = cipher.doFinal(ivinput);
 
             cipher.init(Cipher.ENCRYPT_MODE, sessionEncryptionKey, new IvParameterSpec(ivdata));
-            byte[] result = cipher.doFinal(Util.padMessageToBlocksize(message, BLOCKSIZE_BYTES));
+            byte[] result = cipher.doFinal(Crypto.padMessageToBlocksize(message, BLOCKSIZE_BYTES));
             return result;
         } catch(NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
             // Should not occur
@@ -89,14 +89,14 @@ public class AESEncryptionMode implements EncryptionMode {
             transactionIdentifier[1],
             transactionIdentifier[2],
             transactionIdentifier[3],
-            Util.getByte(commandCounter, 0), // LSB-first (pg. 23)
-            Util.getByte(commandCounter, 1),
+            ByteUtil.getByteLSB(commandCounter, 0), // LSB-first (pg. 23)
+            ByteUtil.getByteLSB(commandCounter, 1),
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         };
 
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, sessionEncryptionKey, Constants.zeroIVPS);
+            cipher.init(Cipher.ENCRYPT_MODE, sessionEncryptionKey, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
             byte[] ivdata = cipher.doFinal(ivinput);
             cipher.init(Cipher.DECRYPT_MODE, sessionEncryptionKey, new IvParameterSpec(ivdata));
             return cipher.doFinal(message);
@@ -109,7 +109,7 @@ public class AESEncryptionMode implements EncryptionMode {
 
 	@Override
 	public byte[] generateMac(byte[] message) {
-        return Util.simpleAesCmac(sessionMacKey, message);
+        return Crypto.simpleAesCmac(sessionMacKey, message);
 	}
 
     public static boolean authenticateEV2(DnaCommunicator communicator, int keyNum, byte[] keyData) throws IOException {
@@ -144,14 +144,14 @@ public class AESEncryptionMode implements EncryptionMode {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
             SecretKeySpec key = new SecretKeySpec(keyData, "AES");
     
-            cipher.init(Cipher.DECRYPT_MODE, key, Constants.zeroIVPS);
+            cipher.init(Cipher.DECRYPT_MODE, key, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
             byte[] b = cipher.doFinal(e_k_b.data);
-            byte[] a = Util.randomByteArray(16);
+            byte[] a = ByteUtil.randomByteArray(16);
     
-            byte[] bprime = Util.rotateLeft(b, 1);
+            byte[] bprime = ByteUtil.rotateLeft(b, 1);
     
-            cipher.init(Cipher.ENCRYPT_MODE, key, Constants.zeroIVPS);
-            byte[] e_k_a_bp = cipher.doFinal(Util.combineByteArrays(a, bprime));
+            cipher.init(Cipher.ENCRYPT_MODE, key, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
+            byte[] e_k_a_bp = cipher.doFinal(ByteUtil.combineByteArrays(a, bprime));
     
             CommandResult e_k_ti_ap_pdcap_pcdcap = communicator.nxpNativeCommand(
                 (byte)0xaf,
@@ -168,17 +168,17 @@ public class AESEncryptionMode implements EncryptionMode {
                 return false;
             }
     
-            cipher.init(Cipher.DECRYPT_MODE, key, Constants.zeroIVPS);
+            cipher.init(Cipher.DECRYPT_MODE, key, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
             byte[] ti_ap_pdcap_pcdcap = cipher.doFinal(e_k_ti_ap_pdcap_pcdcap.data);
     
-            byte[] ti = Util.subArrayOf(ti_ap_pdcap_pcdcap, 0, 4);
-            byte[] aprime = Util.subArrayOf(ti_ap_pdcap_pcdcap, 4, 16);
+            byte[] ti = ByteUtil.subArrayOf(ti_ap_pdcap_pcdcap, 0, 4);
+            byte[] aprime = ByteUtil.subArrayOf(ti_ap_pdcap_pcdcap, 4, 16);
     
             // NOTE - should save these
-            byte[] pdcap = Util.subArrayOf(ti_ap_pdcap_pcdcap, 20, 6);
-            byte[] pcdcap = Util.subArrayOf(ti_ap_pdcap_pcdcap, 26, 6);
+            byte[] pdcap = ByteUtil.subArrayOf(ti_ap_pdcap_pcdcap, 20, 6);
+            byte[] pcdcap = ByteUtil.subArrayOf(ti_ap_pdcap_pcdcap, 26, 6);
     
-            if(!Util.arraysEqual(Util.rotateRight(aprime, 1), a)) {
+            if(!ByteUtil.arraysEqual(ByteUtil.rotateRight(aprime, 1), a)) {
                 return false;
             }
     
@@ -225,7 +225,7 @@ public class AESEncryptionMode implements EncryptionMode {
     protected SecretKeySpec generateAESSessionKey(byte[] purpose) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, key, Constants.zeroIVPS);
+            cipher.init(Cipher.DECRYPT_MODE, key, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
             byte[] sv = generateAESSessionVector(purpose);
             AESCMAC cmac = new AESCMAC(cipher, key);
             byte[] keyData = cmac.perform(sv, BLOCKSIZE_BYTES);

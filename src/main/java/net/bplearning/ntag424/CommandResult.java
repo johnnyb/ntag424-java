@@ -1,9 +1,9 @@
 package net.bplearning.ntag424;
 
-import java.io.IOError;
 import java.io.IOException;
 
 import net.bplearning.ntag424.exception.ProtocolException;
+import net.bplearning.ntag424.util.ByteUtil;
 
 public class CommandResult {
 	public byte[] data;
@@ -31,7 +31,7 @@ public class CommandResult {
 
 	public void throwUnlessSuccessful() throws IOException {
 		if(!isSuccessStatus()) {
-			throw new ProtocolException("Invalid status result: " + Util.byteToHex(new byte[]{status1, status2}));
+			throw new ProtocolException("Invalid status result: " + ByteUtil.byteToHex(new byte[]{status1, status2}));
 		}
 	}
 

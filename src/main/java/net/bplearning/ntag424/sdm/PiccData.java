@@ -1,7 +1,5 @@
 package net.bplearning.ntag424.sdm;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -12,12 +10,12 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import net.bplearning.ntag424.CMAC;
-import net.bplearning.ntag424.Constants;
-import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.aes.AESCMAC;
 import net.bplearning.ntag424.lrp.LRPCMAC;
 import net.bplearning.ntag424.lrp.LRPCipher;
 import net.bplearning.ntag424.lrp.LRPMultiCipher;
+import net.bplearning.ntag424.util.ByteUtil;
+import net.bplearning.ntag424.util.Crypto;
 
 public class PiccData {
 	byte[] uid;
@@ -49,7 +47,7 @@ public class PiccData {
 		if((tag & 0b01000000) == 0) {
 			// No tag counter
 		} else {
-			pdata.readCounter = Util.lsbBytesToInt(Util.subArrayOf(piccRecord, curIdx, 3));
+			pdata.readCounter = ByteUtil.lsbBytesToInt(ByteUtil.subArrayOf(piccRecord, curIdx, 3));
 		}
 
 		pdata.usesLrp = usesLrp;
@@ -68,13 +66,13 @@ public class PiccData {
 		byte[] alldata;
 		if(usesLrp) {
 			// LRP encodes the LRP counter in the first 8 bytes
-			alldata = Util.simpleLrpDecrypt(
+			alldata = Crypto.simpleLrpDecrypt(
 				key, 0, 
-				Util.subArrayOf(encryptedData, 0, 8),
-				Util.subArrayOf(encryptedData, 8, 16)
+				ByteUtil.subArrayOf(encryptedData, 0, 8),
+				ByteUtil.subArrayOf(encryptedData, 8, 16)
 			);
 		} else {
-			alldata = Util.simpleAesDecrypt(key, encryptedData);
+			alldata = Crypto.simpleAesDecrypt(key, encryptedData);
 		}
 
 		return decodeFromBytes(alldata, usesLrp);
@@ -87,11 +85,11 @@ public class PiccData {
 	 * object.  This returns null if the MAC does not verify.
 	 */
 	public static PiccData decodeAndVerifyMac(String uidString, String readCounterString, String macString, byte[] macFileKey, boolean usesLrp) {
-		PiccData piccData = new PiccData(Util.hexToByte(uidString), (int)Util.msbBytesToLong(Util.hexToByte(readCounterString)), usesLrp);
+		PiccData piccData = new PiccData(ByteUtil.hexToByte(uidString), (int) ByteUtil.msbBytesToLong(ByteUtil.hexToByte(readCounterString)), usesLrp);
 		piccData.setMacFileKey(macFileKey);
 		byte[] expectedMac = piccData.performShortCMAC(null);
-		byte[] actualMac = Util.hexToByte(macString);
-		if(Util.arraysEqual(expectedMac, actualMac)) {
+		byte[] actualMac = ByteUtil.hexToByte(macString);
+		if(ByteUtil.arraysEqual(expectedMac, actualMac)) {
 			return piccData;
 		} else {
 			return null;
@@ -109,13 +107,13 @@ public class PiccData {
 	protected byte[] generateAESSessionEncKey(byte[] macKey) {
 		// pg. 41
 		byte[] sv = generateAESEncSessionVector();
-		return Util.simpleAesCmac(macKey, sv);
+		return Crypto.simpleAesCmac(macKey, sv);
 	}
 
 	protected byte[] generateAESSessionMacKey(byte[] macKey) {
 		// pg. 41
 		byte[] sv = generateAESMACSessionVector();
-		return Util.simpleAesCmac(macKey, sv);
+		return Crypto.simpleAesCmac(macKey, sv);
 	}
 
 	protected byte[] generateAESMACSessionVector() {
@@ -146,7 +144,7 @@ public class PiccData {
 		System.arraycopy(prefix, 0, sv, 0, prefix.length);
 		int svIdx = prefix.length;
 		if(uid != null) {
-			if(!Util.arraysEqual(uid, new byte[]{0,0,0,0,0,0,0})) {
+			if(!ByteUtil.arraysEqual(uid, new byte[]{0,0,0,0,0,0,0})) {
 				System.arraycopy(uid, 0, sv, svIdx, uid.length);
 				svIdx += uid.length;
 			}
@@ -154,9 +152,9 @@ public class PiccData {
 
 		if(readCounter > 0) {
 			byte[] readCounterBytes = new byte[] {
-				Util.getByte(readCounter, 0),
-				Util.getByte(readCounter, 1),
-				Util.getByte(readCounter, 2)
+				ByteUtil.getByteLSB(readCounter, 0),
+				ByteUtil.getByteLSB(readCounter, 1),
+				ByteUtil.getByteLSB(readCounter, 2)
 			};
 			System.arraycopy(readCounterBytes, 0, sv, svIdx, readCounterBytes.length);
 			svIdx += readCounterBytes.length;
@@ -191,7 +189,7 @@ public class PiccData {
 
 				Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
 
-				cipher.init(Cipher.ENCRYPT_MODE, keySpec, Constants.zeroIVPS);
+				cipher.init(Cipher.ENCRYPT_MODE, keySpec, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
 				AESCMAC mac = new AESCMAC(cipher, keySpec);
 				return mac;
 			} catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException e) {
@@ -202,12 +200,12 @@ public class PiccData {
 
 	public byte[] performCMAC(byte[] message) {
 		CMAC cmac = usesLrp ? generateLRPCMAC(macFileKey) : generateAESCMAC(macFileKey);
-		byte[] result = cmac.perform(message, Constants.CMAC_SIZE);
+		byte[] result = cmac.perform(message, net.bplearning.ntag424.constants.Crypto.CMAC_SIZE);
 		return result;
 	}
 
 	public byte[] performShortCMAC(byte[] message) {
-		return Util.shortenCMAC(performCMAC(message));
+		return Crypto.shortenCMAC(performCMAC(message));
 	};
 
 	public void setMacFileKey(byte[] key) {
@@ -218,24 +216,24 @@ public class PiccData {
 		if(usesLrp) {
 			// Counter transformation is defined on pg. 39
 			byte[] counterBytes = new byte[] {
-				Util.getByte(readCounter, 0),
-				Util.getByte(readCounter, 1),
-				Util.getByte(readCounter, 2),
+				ByteUtil.getByteLSB(readCounter, 0),
+				ByteUtil.getByteLSB(readCounter, 1),
+				ByteUtil.getByteLSB(readCounter, 2),
 				0, 0, 0
 			};
 
 			byte[] sessionKey = generateLRPSessionKey(macFileKey);
-			return Util.simpleLrpDecrypt(sessionKey, 1, counterBytes, encryptedData);
+			return Crypto.simpleLrpDecrypt(sessionKey, 1, counterBytes, encryptedData);
 
 		} else {
 			byte[] sessionKey = generateAESSessionEncKey(macFileKey);
 			byte[] ivInput = new byte[16];
-			ivInput[0] = Util.getByte(readCounter, 0);
-			ivInput[1] = Util.getByte(readCounter, 1);
-			ivInput[2] = Util.getByte(readCounter, 2);
-			byte[] ivBytes = Util.simpleAesEncrypt(sessionKey, ivInput);
+			ivInput[0] = ByteUtil.getByteLSB(readCounter, 0);
+			ivInput[1] = ByteUtil.getByteLSB(readCounter, 1);
+			ivInput[2] = ByteUtil.getByteLSB(readCounter, 2);
+			byte[] ivBytes = Crypto.simpleAesEncrypt(sessionKey, ivInput);
 			IvParameterSpec ivps = new IvParameterSpec(ivBytes);
-			return Util.simpleAesDecrypt(sessionKey, encryptedData, ivps);
+			return Crypto.simpleAesDecrypt(sessionKey, encryptedData, ivps);
 		}
 	}
 
@@ -244,5 +242,5 @@ public class PiccData {
 	/** Returns the card's read counter */
 	public int getReadCounter() { return readCounter; }
 	/** Returns the UID as a String.  This is also helpful if you want to be sure you have a normalized version of the UID. */
-	public String getUidString() { return Util.byteToHex(uid); }
+	public String getUidString() { return ByteUtil.byteToHex(uid); }
 }

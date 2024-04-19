@@ -1,24 +1,17 @@
 package net.bplearning.ntag424.card;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
-
-import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
-import net.bplearning.ntag424.aes.AESCMAC;
 import net.bplearning.ntag424.command.ChangeKey;
 import net.bplearning.ntag424.command.GetCardUid;
+import net.bplearning.ntag424.constants.Ntag424;
 import net.bplearning.ntag424.exception.ProtocolException;
 import net.bplearning.ntag424.sdm.PiccData;
+import net.bplearning.ntag424.util.ByteUtil;
+import net.bplearning.ntag424.util.Crypto;
 
 /**
  * This class contains basic information about a key
@@ -27,10 +20,10 @@ import net.bplearning.ntag424.sdm.PiccData;
  */
 public class KeyInfo {
 	/** The non-diversified key */
-	public byte[] key = Constants.FACTORY_KEY;
+	public byte[] key = Ntag424.FACTORY_KEY;
 
 	/** Used for key diversification. You can probably leave this to the default. */
-	public byte[] applicationId = Constants.DESFIRE_AID;
+	public byte[] applicationId = Ntag424.DESFIRE_AID;
 	
 	/** Used for key diversification. You can set this to whatever you want. */
 	public byte[] systemIdentifier = new byte[]{};
@@ -61,8 +54,8 @@ public class KeyInfo {
 		}
 
 		// NOTE - we are not including the padblock because the CMAC function already does it
-		byte[] diversificationData = Util.combineByteArrays(diversityConstant, uidBytes, applicationId, systemIdentifier);
-		return Util.simpleAesCmac(key, diversificationData);
+		byte[] diversificationData = ByteUtil.combineByteArrays(diversityConstant, uidBytes, applicationId, systemIdentifier);
+		return Crypto.simpleAesCmac(key, diversificationData);
 	}
 
 	/** This is a utility function to go through each old 
@@ -89,8 +82,8 @@ public class KeyInfo {
 			byte[] oldCardKey = key.generateKeyForCardUid(uid);
 			try {
 				System.out.println("Syncing key: " + keyNum);
-				System.out.println("Old: " + Util.byteToHex(oldCardKey));
-				System.out.println("To:" + Util.byteToHex(cardKey));
+				System.out.println("Old: " + ByteUtil.byteToHex(oldCardKey));
+				System.out.println("To:" + ByteUtil.byteToHex(cardKey));
 				ChangeKey.run(comm, keyNum, oldCardKey, cardKey, version);
 				wasSuccessful = true;
 				break;
@@ -103,11 +96,11 @@ public class KeyInfo {
 	}
 
 	public PiccData decodeAndVerifyMac(String uidString, String readCounterString, String macString, boolean usesLrp) {
-		PiccData piccData = new PiccData(Util.hexToByte(uidString), (int)Util.msbBytesToLong(Util.hexToByte(readCounterString)), usesLrp);
+		PiccData piccData = new PiccData(ByteUtil.hexToByte(uidString), (int) ByteUtil.msbBytesToLong(ByteUtil.hexToByte(readCounterString)), usesLrp);
 		piccData.setMacFileKey(generateKeyForCardUid(piccData.getUid()));
 		byte[] expectedMac = piccData.performShortCMAC(null);
-		byte[] actualMac = Util.hexToByte(macString);
-		if(!Util.arraysEqual(expectedMac, actualMac)) {
+		byte[] actualMac = ByteUtil.hexToByte(macString);
+		if(!ByteUtil.arraysEqual(expectedMac, actualMac)) {
 			return null;
 		}
 		return piccData;

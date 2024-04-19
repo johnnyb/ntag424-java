@@ -6,9 +6,9 @@ import javax.crypto.Cipher;
 
 import net.bplearning.ntag424.CommandResult;
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.lrp.LRPCipher;
 import net.bplearning.ntag424.lrp.LRPMultiCipher;
+import net.bplearning.ntag424.util.ByteUtil;
 
 public class LRPEncryptionMode implements EncryptionMode {
 	LRPMultiCipher sessionMultiCipher;
@@ -96,8 +96,8 @@ public class LRPEncryptionMode implements EncryptionMode {
 		   return false; // Bad data
 	   }
 
-	   byte[] rndB = Util.subArrayOf(result.data, 1, 16);
-	   byte[] rndA = Util.randomByteArray(16);
+	   byte[] rndB = ByteUtil.subArrayOf(result.data, 1, 16);
+	   byte[] rndA = ByteUtil.randomByteArray(16);
 
 	   LRPMultiCipher initialMultiCipher = new LRPMultiCipher(keyData);
 	   LRPEncryptionMode lrpMode = new LRPEncryptionMode(communicator, initialMultiCipher, rndA, rndB);
@@ -105,11 +105,11 @@ public class LRPEncryptionMode implements EncryptionMode {
 	   lrpMode.authenticationKeyNum = keyNum;
 
 	   // STAGE 2 Authentication (pg. 52)
-	   byte[] rndMac = lrpMode.generateMac(Util.combineByteArrays(rndA, rndB));
+	   byte[] rndMac = lrpMode.generateMac(ByteUtil.combineByteArrays(rndA, rndB));
 
 	   CommandResult stage2Result = communicator.nxpNativeCommand(
 		   (byte)0xaf,
-		   Util.combineByteArrays(rndA, rndMac),
+		   ByteUtil.combineByteArrays(rndA, rndMac),
 		   null,
 		   null
 	   );
@@ -118,17 +118,17 @@ public class LRPEncryptionMode implements EncryptionMode {
 		return false;
 	   }
 
-	   byte[] encryptedData = Util.subArrayOf(stage2Result.data, 0, 16);
-	   byte[] macData = Util.subArrayOf(stage2Result.data, 16, 16);
+	   byte[] encryptedData = ByteUtil.subArrayOf(stage2Result.data, 0, 16);
+	   byte[] macData = ByteUtil.subArrayOf(stage2Result.data, 16, 16);
 
 	   byte[] decryptedData = lrpMode.sessionLrpEncryptionCipher.cryptFullBlocks(encryptedData, Cipher.DECRYPT_MODE);
 
-	   byte[] expectedMacData = lrpMode.generateMac(Util.combineByteArrays(rndB, rndA, encryptedData));
-	   if(!Util.arraysEqual(macData, expectedMacData)) {
+	   byte[] expectedMacData = lrpMode.generateMac(ByteUtil.combineByteArrays(rndB, rndA, encryptedData));
+	   if(!ByteUtil.arraysEqual(macData, expectedMacData)) {
 		   return false;
 	   }
 
-	   byte[] ti = Util.subArrayOf(decryptedData, 0, 4);
+	   byte[] ti = ByteUtil.subArrayOf(decryptedData, 0, 4);
 	   communicator.startEncryptedSession(lrpMode, keyNum, 0, ti);
 	   return true;
    }

@@ -4,10 +4,9 @@ import java.io.IOException;
 
 import net.bplearning.ntag424.CommandResult;
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
-import net.bplearning.ntag424.encryptionmode.AESEncryptionMode;
-import net.bplearning.ntag424.encryptionmode.LRPEncryptionMode;
 import net.bplearning.ntag424.exception.ProtocolException;
+import net.bplearning.ntag424.util.ByteUtil;
+import net.bplearning.ntag424.util.Crypto;
 
 public class ChangeKey {
     // FIXME - need to change this to a boolean, but I don't know which result param means "bad old key".  9E?
@@ -24,19 +23,19 @@ public class ChangeKey {
             CommandResult result = communicator.nxpEncryptedCommand(
                 (byte)0xc4,
 				new byte[] { (byte)keyNum },
-				Util.combineByteArrays(newKey, new byte[] { (byte)keyVersion })
+				ByteUtil.combineByteArrays(newKey, new byte[] { (byte)keyVersion })
             );
 			result.throwUnlessSuccessful();
 
             // Success!  Need to restart authentication
             communicator.restartSession();
         } else {
-            byte[] crc = Util.jamCrc32(newKey);
-            byte[] xorkey = Util.xor(oldKey, newKey);
+            byte[] crc = Crypto.jamCrc32(newKey);
+            byte[] xorkey = ByteUtil.xor(oldKey, newKey);
             CommandResult result = communicator.nxpEncryptedCommand(
 				(byte)0xc4,
 				new byte[] { (byte) keyNum },
-                Util.combineByteArrays(xorkey, new byte[] { (byte)keyVersion }, crc)
+                ByteUtil.combineByteArrays(xorkey, new byte[] { (byte)keyVersion }, crc)
             );
             
 			result.throwUnlessSuccessful();

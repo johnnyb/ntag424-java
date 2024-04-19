@@ -3,10 +3,11 @@ package net.bplearning.ntag424.sdm;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.bplearning.ntag424.Constants;
-import net.bplearning.ntag424.Pair;
-import net.bplearning.ntag424.Util;
-import net.bplearning.ntag424.command.FileSettings;
+import net.bplearning.ntag424.constants.Permissions;
+import net.bplearning.ntag424.util.ByteUtil;
+import net.bplearning.ntag424.util.Crypto;
+import net.bplearning.ntag424.util.Pair;
+import net.bplearning.ntag424.util.Ndef;
 
 /**
  * This class makes reading/writing NDEF data easier.
@@ -41,7 +42,7 @@ public class NdefTemplateMaster {
 		return generateNdefTemplateFromUrlString(urlString, null, sdmDefaults);
 	}
 	public byte[] generateNdefTemplateFromUrlString(String urlString, byte[] secretData, SDMSettings sdmDefaults) {
-		byte[] ndefData = Util.ndefDataForUrlString(urlString);
+		byte[] ndefData = Ndef.ndefDataForUrlString(urlString);
 		byte[] ndefRecord = generateNdefTemplateFrom(ndefData, secretData, sdmDefaults);
 		ndefRecord[1] = (byte)(ndefRecord.length - 2); // New record length
 		ndefRecord[4] = (byte)(ndefRecord.length - 6); // New URL length
@@ -74,9 +75,9 @@ public class NdefTemplateMaster {
 
 		for(Placeholder p: Placeholder.values()) {
 			int dataLength = placeholderLengths.get(p);
-			byte[] replacement = Util.generateRepeatingBytes(overwriteChar, dataLength);
+			byte[] replacement = ByteUtil.generateRepeatingBytes(overwriteChar, dataLength);
 			byte[] template = placeholderTemplates.get(p);
-			Pair<byte[], Integer> searchResult = Util.findAndReplaceBytes(
+			Pair<byte[], Integer> searchResult = ByteUtil.findAndReplaceBytes(
 				record, 
 				template, 
 				replacement
@@ -114,7 +115,7 @@ public class NdefTemplateMaster {
 	}
 
 	int getEncodedFileDataLength(SDMSettings settings) {
-		return Util.roundUpToMultiple(fileDataLength, 16) * getAsciiMultiplier(settings);
+		return Crypto.roundUpToMultiple(fileDataLength, 16) * getAsciiMultiplier(settings);
 	}
 
 	Map<Placeholder, Integer> getPlaceholderLengths(SDMSettings settings) {
@@ -165,7 +166,7 @@ public class NdefTemplateMaster {
 		} else {
 			sdmSettings.sdmOptionReadCounter = true;
 			sdmSettings.sdmReadCounterOffset = readCounterOffset;
-			sdmSettings.sdmMetaReadPerm = Constants.ACCESS_EVERYONE; // Required for reading the readcounter directly		
+			sdmSettings.sdmMetaReadPerm = Permissions.ACCESS_EVERYONE; // Required for reading the readcounter directly
 		}
 		if(fileDataOffset == null) {
 			sdmSettings.sdmOptionEncryptFileData = false;

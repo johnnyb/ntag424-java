@@ -1,14 +1,11 @@
 package net.bplearning.ntag424.lrp;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.crypto.Cipher;
 
-import net.bplearning.ntag424.Constants;
-import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.util.ByteUtil;
+import net.bplearning.ntag424.util.Crypto;
 
 public class LRPCipher {
 	public static final int BLOCKSIZE_BYTES = 16;
@@ -67,12 +64,12 @@ public class LRPCipher {
 		byte[] y = key;
         for(int piece: pieces) {
             byte[] p = multiCipher.getPlaintext(piece);
-            y = Util.simpleAesEncrypt(y, p);
+            y = Crypto.simpleAesEncrypt(y, p);
         }
         if(isFinal) {
-            y = Util.simpleAesEncrypt(
+            y = Crypto.simpleAesEncrypt(
                 y,
-                Constants.zeroBlock
+                net.bplearning.ntag424.constants.Crypto.zeroBlock
             );
         }
         return y;
@@ -96,11 +93,11 @@ public class LRPCipher {
             int blockStart = BLOCKSIZE_BYTES * i;
             int[] x = getCounterNibbles();
             byte[] y = evalLRP(x, true);
-            byte[] block = Util.subArrayOf(src, blockStart, BLOCKSIZE_BYTES);
+            byte[] block = ByteUtil.subArrayOf(src, blockStart, BLOCKSIZE_BYTES);
             byte[] resultBlock = 
 				cryptMode == Cipher.ENCRYPT_MODE 
-					? Util.simpleAesEncrypt(y, block) 
-					: Util.simpleAesDecrypt(y, block);
+					? Crypto.simpleAesEncrypt(y, block)
+					: Crypto.simpleAesDecrypt(y, block);
 			System.arraycopy(resultBlock, 0, result, blockStart, resultBlock.length);
 
             counter++;
@@ -119,9 +116,9 @@ public class LRPCipher {
         byte[] newSrc = new byte[(fullBlocks + 1) * BLOCKSIZE_BYTES];
 		System.arraycopy(src, 0, newSrc, 0, src.length);
         if((src.length % BLOCKSIZE_BYTES) == 0) {
-			System.arraycopy(Constants.fullPaddingBlock, 0, newSrc, newSrc.length - BLOCKSIZE_BYTES, Constants.fullPaddingBlock.length);
+			System.arraycopy(net.bplearning.ntag424.constants.Crypto.fullPaddingBlock, 0, newSrc, newSrc.length - BLOCKSIZE_BYTES, net.bplearning.ntag424.constants.Crypto.fullPaddingBlock.length);
         } else {
-            newSrc[src.length] = (byte)Constants.marker;
+            newSrc[src.length] = (byte) net.bplearning.ntag424.constants.Crypto.marker;
         }
         return cryptFullBlocks(newSrc, Cipher.ENCRYPT_MODE);
 	}
@@ -137,12 +134,12 @@ public class LRPCipher {
 
 		// Back up until you find the final marker
 		int lastIdx = result.length - 1;
-		while(result[lastIdx] != Constants.marker) {
+		while(result[lastIdx] != net.bplearning.ntag424.constants.Crypto.marker) {
 			lastIdx--;
 		}
 
 		// Return everything before that
-		return Util.subArrayOf(result, 0, lastIdx);
+		return ByteUtil.subArrayOf(result, 0, lastIdx);
 	}
 
 	// 
@@ -151,7 +148,7 @@ public class LRPCipher {
 	}
 
 	public byte[] cmac(byte[] message) {
-		return mac.perform(message, Constants.CMAC_SIZE);
+		return mac.perform(message, net.bplearning.ntag424.constants.Crypto.CMAC_SIZE);
 	}
 
 	public void setCounter(long counter) {

@@ -3,7 +3,7 @@ package net.bplearning.ntag424.command;
 import java.io.IOException;
 
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.util.ByteUtil;
 
 public class IsoSelectFile implements Command {
 	public static final byte SELECT_MODE_BY_FILE_IDENTIFIER = 0x00;
@@ -13,11 +13,11 @@ public class IsoSelectFile implements Command {
 	public static final byte SELECT_MODE_NAME = 0x04;
 
 	public static void run(DnaCommunicator communicator, byte mode, int identifier) throws IOException {
-		run(communicator, mode, new byte[]{Util.getByte(identifier, 1), Util.getByte(identifier, 0)});
+		run(communicator, mode, new byte[]{ByteUtil.getByteLSB(identifier, 1), ByteUtil.getByteLSB(identifier, 0)});
 	}
 	
 	public static void run(DnaCommunicator communicator, byte mode, byte[] identificationData) throws IOException {
-		byte[] command =Util.combineByteArrays(
+		byte[] command = ByteUtil.combineByteArrays(
 			new byte[] {
 				0x00, // class
 				(byte)0xa4, // ISOSelectFile

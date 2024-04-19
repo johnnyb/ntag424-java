@@ -3,6 +3,7 @@ package net.bplearning.ntag424;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
 
+import net.bplearning.ntag424.util.ByteUtil;
 import org.junit.Test;
 
 import net.bplearning.ntag424.card.KeyInfo;
@@ -13,12 +14,12 @@ public class KeyInfoTest {
 	public void testKeyInfo() {
 		// Example from pg. 7
 		KeyInfo keyInfo = new KeyInfo();
-		keyInfo.systemIdentifier = Util.hexToByte("4E585020416275");
-		keyInfo.key = Util.hexToByte("00112233445566778899AABBCCDDEEFF");
+		keyInfo.systemIdentifier = ByteUtil.hexToByte("4E585020416275");
+		keyInfo.key = ByteUtil.hexToByte("00112233445566778899AABBCCDDEEFF");
 		keyInfo.diversifyKeys = true;
-		byte[] cardUid = Util.hexToByte("04782E21801D80");
+		byte[] cardUid = ByteUtil.hexToByte("04782E21801D80");
 		byte[] cardKey = keyInfo.generateKeyForCardUid(cardUid);
-		byte[] expectedCardKey = Util.hexToByte("A8DD63A3B89D54B37CA802473FDA9175");
+		byte[] expectedCardKey = ByteUtil.hexToByte("A8DD63A3B89D54B37CA802473FDA9175");
 		assertArrayEquals("Diversified card key incorrect", cardKey, expectedCardKey);
 	}
 

@@ -1,5 +1,7 @@
 package net.bplearning.ntag424;
 
+import net.bplearning.ntag424.constants.Crypto;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -21,7 +23,7 @@ public class AESCipher {
 	}
 
 	public AESCipher(int opmode, Key key) {
-		currentCipher = getCipher(opmode, key, Constants.zeroIVPS);
+		currentCipher = getCipher(opmode, key, Crypto.zeroIVPS);
 	}
 
 	public static Cipher getCipher(int opmode, Key key, AlgorithmParameterSpec spec) {

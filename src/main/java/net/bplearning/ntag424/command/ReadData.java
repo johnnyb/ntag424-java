@@ -5,7 +5,7 @@ import java.io.IOException;
 import net.bplearning.ntag424.CommandResult;
 import net.bplearning.ntag424.CommunicationMode;
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.util.ByteUtil;
 
 public class ReadData implements Command {
 	public static byte[] run(DnaCommunicator communicator, int fileNum, int offset, int length) throws IOException {
@@ -19,12 +19,12 @@ public class ReadData implements Command {
 				(byte)0xad,
 				new byte[] {
 					(byte) fileNum,
-					Util.getByte(offset, 0),
-					Util.getByte(offset, 1),
-					Util.getByte(offset, 2),
-					Util.getByte(length, 0),
-					Util.getByte(length, 1),
-					Util.getByte(length, 2)
+					ByteUtil.getByteLSB(offset, 0),
+					ByteUtil.getByteLSB(offset, 1),
+					ByteUtil.getByteLSB(offset, 2),
+					ByteUtil.getByteLSB(length, 0),
+					ByteUtil.getByteLSB(length, 1),
+					ByteUtil.getByteLSB(length, 2)
 				}, 
 				null
 			);

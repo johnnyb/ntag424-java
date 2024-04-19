@@ -2,13 +2,15 @@ package net.bplearning.ntag424;
 
 import java.io.IOException;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import net.bplearning.ntag424.command.IsoSelectFile;
+import net.bplearning.ntag424.constants.Ntag424;
 import net.bplearning.ntag424.encryptionmode.EncryptionMode;
 import net.bplearning.ntag424.encryptionmode.LRPEncryptionMode;
 import net.bplearning.ntag424.exception.MACValidationException;
 import net.bplearning.ntag424.exception.ProtocolException;
+import net.bplearning.ntag424.util.ByteUtil;
+import net.bplearning.ntag424.util.Crypto;
 
 public class DnaCommunicator {
 	public interface ThrowableFunction <T, R, E extends Throwable> {
@@ -27,7 +29,7 @@ public class DnaCommunicator {
 	}
 
 	public void log(String tag, byte[] data) {
-		log(tag + ": " + Util.byteToHex(data));
+		log(tag + ": " + ByteUtil.byteToHex(data));
 	}
 
 	public void setLogger(Consumer<String> newLoggerFunction) {
@@ -60,7 +62,7 @@ public class DnaCommunicator {
 	 */
 	public void beginCommunication() throws IOException {
 		log("Beginning communication");
-		IsoSelectFile.run(this, IsoSelectFile.SELECT_MODE_BY_FILE_IDENTIFIER, Constants.DF_FILE_ID);
+		IsoSelectFile.run(this, IsoSelectFile.SELECT_MODE_BY_FILE_IDENTIFIER, Ntag424.DF_FILE_ID);
 	}
 
 	// **** SESSION MANAGEMENT **** //
@@ -105,7 +107,7 @@ public class DnaCommunicator {
 	 * @throws IOException
 	 */
 	public CommandResult isoCommand(byte instructionClass, byte instruction, byte param1, byte param2, byte[] data, byte expectedResponseLength) throws IOException {
-		byte[] command = Util.combineByteArrays(
+		byte[] command = ByteUtil.combineByteArrays(
 			new byte[] {
 				instructionClass,
 				instruction,
@@ -129,7 +131,7 @@ public class DnaCommunicator {
 	 * Does not affect the command counter.
 	 */
 	public CommandResult nxpNativeCommand(byte cmd, byte[] hdr, byte[] data, byte[] macData) throws IOException {
-		return isoCommand((byte)0x90, cmd, (byte)0x00, (byte)0x00, Util.combineByteArrays(hdr, data, macData), LENGTH_ALL);
+		return isoCommand((byte)0x90, cmd, (byte)0x00, (byte)0x00, ByteUtil.combineByteArrays(hdr, data, macData), LENGTH_ALL);
     }
 
 	/**
@@ -156,18 +158,18 @@ public class DnaCommunicator {
         // PREPARE MAC DATA
 		byte[] cipherBase = new byte[] {
             cmd,
-			Util.getByte(commandCounter, 0),
-			Util.getByte(commandCounter, 1),
+			ByteUtil.getByteLSB(commandCounter, 0),
+			ByteUtil.getByteLSB(commandCounter, 1),
 			activeTransactionIdentifier[0],
 			activeTransactionIdentifier[1],
 			activeTransactionIdentifier[2],
 			activeTransactionIdentifier[3]
 		};
-		byte[] cipherData = Util.combineByteArrays(cipherBase, hdr, data);
+		byte[] cipherData = ByteUtil.combineByteArrays(cipherBase, hdr, data);
 
         // PERFORM MAC WITH APPROPRIATE ALGORITHM
         byte[] longMacData = encryptionMode.generateMac(cipherData);
-		byte[] macData = Util.shortenCMAC(longMacData);
+		byte[] macData = Crypto.shortenCMAC(longMacData);
 
         // DO THE COMMAND
         CommandResult result = nxpNativeCommand(cmd, hdr, data, macData);
@@ -179,23 +181,23 @@ public class DnaCommunicator {
 			return new CommandResult(new byte[0], result.status1, result.status2);
         }
 
-        byte[] dataBytes = Util.subArrayOf(result.data, 0, sz - 8);
-        byte[] macBytes = Util.subArrayOf(result.data, sz - 8, 8);
+        byte[] dataBytes = ByteUtil.subArrayOf(result.data, 0, sz - 8);
+        byte[] macBytes = ByteUtil.subArrayOf(result.data, sz - 8, 8);
 
         // Validate MAC result
 		byte[] resultMacInputHeader = new byte[] {
 			result.status2,
-			Util.getByte(commandCounter, 0),
-			Util.getByte(commandCounter, 1),
+			ByteUtil.getByteLSB(commandCounter, 0),
+			ByteUtil.getByteLSB(commandCounter, 1),
 			activeTransactionIdentifier[0],
 			activeTransactionIdentifier[1],
 			activeTransactionIdentifier[2],
 			activeTransactionIdentifier[3]
 		};
-		byte[] resultMacInput = Util.combineByteArrays(resultMacInputHeader, dataBytes);
+		byte[] resultMacInput = ByteUtil.combineByteArrays(resultMacInputHeader, dataBytes);
         byte[] resultLongMacData = encryptionMode.generateMac(resultMacInput);
-        byte[] resultMacData = Util.shortenCMAC(resultLongMacData);
-        if(!Util.arraysEqual(resultMacData, macBytes)) {
+        byte[] resultMacData = Crypto.shortenCMAC(resultLongMacData);
+        if(!ByteUtil.arraysEqual(resultMacData, macBytes)) {
 			throw new MACValidationException();
         }
 
@@ -225,7 +227,7 @@ public class DnaCommunicator {
 		} else {
 			decryptedResultData = encryptionMode.decryptData(result.data);
 		}
-		log("Decrypted data: " + Util.byteToHex(decryptedResultData));
+		log("Decrypted data: " + ByteUtil.byteToHex(decryptedResultData));
 
 		return new CommandResult(decryptedResultData, result.status1, result.status2);
     }

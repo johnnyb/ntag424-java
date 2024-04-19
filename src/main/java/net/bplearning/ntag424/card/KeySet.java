@@ -2,10 +2,10 @@ package net.bplearning.ntag424.card;
 
 import java.io.IOException;
 
-import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.constants.Permissions;
 import net.bplearning.ntag424.sdm.PiccData;
+import net.bplearning.ntag424.util.ByteUtil;
 
 /**
  * This class manages a full keyset for your application.
@@ -20,8 +20,8 @@ public class KeySet {
 		new KeyInfo()
 	};
 	protected boolean usesLrp = false;
-	protected int metaKey = Constants.ACCESS_KEY2;
-	protected int macFileKey = Constants.ACCESS_KEY3;
+	protected int metaKey = Permissions.ACCESS_KEY2;
+	protected int macFileKey = Permissions.ACCESS_KEY3;
 
 	/**
 	 * This is a helper function to synchronize all of the
@@ -42,7 +42,7 @@ public class KeySet {
 	 * Helper function to decode plain PICC data that is encoded as individual strings.
 	 */
 	public PiccData decodePiccData(String uidString, String readCounterString) {
-		PiccData piccData = new PiccData(Util.hexToByte(uidString), (int)Util.msbBytesToLong(Util.hexToByte(readCounterString)), usesLrp);
+		PiccData piccData = new PiccData(ByteUtil.hexToByte(uidString), (int) ByteUtil.msbBytesToLong(ByteUtil.hexToByte(readCounterString)), usesLrp);
 		setMacFileKeyFor(piccData);
 		return piccData;
 	}
@@ -64,10 +64,10 @@ public class KeySet {
 	 */
 	public PiccData decryptPiccData(String encryptedPiccData) {
 		PiccData piccData;
-		if(metaKey == Constants.ACCESS_EVERYONE) {
-			piccData = PiccData.decodeFromBytes(Util.hexToByte(encryptedPiccData), usesLrp);
+		if(metaKey == Permissions.ACCESS_EVERYONE) {
+			piccData = PiccData.decodeFromBytes(ByteUtil.hexToByte(encryptedPiccData), usesLrp);
 		} else {
-			piccData = PiccData.decodeFromEncryptedBytes(Util.hexToByte(encryptedPiccData), keys[metaKey].key, usesLrp);
+			piccData = PiccData.decodeFromEncryptedBytes(ByteUtil.hexToByte(encryptedPiccData), keys[metaKey].key, usesLrp);
 		}
 		setMacFileKeyFor(piccData);
 		return piccData;
@@ -81,7 +81,7 @@ public class KeySet {
 	 */
 	public void setMacFileKeyFor(PiccData piccData) {
 		if(piccData == null) { return; }
-		if(macFileKey >= Constants.ACCESS_KEY0 && macFileKey <= Constants.ACCESS_KEY4) {
+		if(macFileKey >= Permissions.ACCESS_KEY0 && macFileKey <= Permissions.ACCESS_KEY4) {
 			piccData.setMacFileKey(keys[macFileKey].generateKeyForCardUid(piccData.getUid()));
 		}
 	}

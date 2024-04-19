@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import net.bplearning.ntag424.CommandResult;
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
+import net.bplearning.ntag424.util.ByteUtil;
 
 public class GetReadCounter {
 	public static int run(DnaCommunicator communicator, int fileNum) throws IOException {
@@ -14,6 +14,6 @@ public class GetReadCounter {
 			null
         );
 		result.throwUnlessSuccessful();
-		return Util.lsbBytesToInt(Util.subArrayOf(result.data, 0, 3));
+		return ByteUtil.lsbBytesToInt(ByteUtil.subArrayOf(result.data, 0, 3));
 	}
 }
