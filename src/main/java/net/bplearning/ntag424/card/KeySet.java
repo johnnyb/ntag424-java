@@ -25,8 +25,8 @@ public class KeySet {
 
 	/**
 	 * This is a helper function to synchronize all of the
-	 * keys on a card to their current version.  Does not 
-	 * change key 0.
+	 * keys on a card to their current version.  Should be performed
+	 * when logged out.  User should relogin after this completes.
 	 */
 	public boolean synchronizeKeys(DnaCommunicator comm) throws IOException {
 		boolean wasSuccessful = true;

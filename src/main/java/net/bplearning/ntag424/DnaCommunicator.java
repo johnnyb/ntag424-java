@@ -254,6 +254,9 @@ public class DnaCommunicator {
 		return encryptionMode;
 	}
 
+	/** Have we logged in with a key? */
+	public boolean isLoggedIn() { return encryptionMode != null; }
+
 	public boolean isUsingLRP() {
 		return encryptionMode instanceof LRPEncryptionMode;
 	}
