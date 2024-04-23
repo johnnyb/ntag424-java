@@ -59,6 +59,7 @@ public class DnaCommunicator {
 	 */
 	public void beginCommunication() throws IOException {
 		log("Beginning communication");
+		// See pg. 10 & 84
 		IsoSelectFile.run(this, IsoSelectFile.SELECT_MODE_BY_FILE_IDENTIFIER, Ntag424.DF_FILE_ID);
 	}
 

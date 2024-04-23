@@ -25,9 +25,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import net.bplearning.ntag424.Constants;
 import net.bplearning.ntag424.DnaCommunicator;
-import net.bplearning.ntag424.Util;
 import net.bplearning.ntag424.card.KeyInfo;
 import net.bplearning.ntag424.card.KeySet;
 import net.bplearning.ntag424.command.ChangeFileSettings;
@@ -36,9 +34,12 @@ import net.bplearning.ntag424.command.GetCardUid;
 import net.bplearning.ntag424.command.GetFileSettings;
 import net.bplearning.ntag424.command.GetKeyVersion;
 import net.bplearning.ntag424.command.WriteData;
+import net.bplearning.ntag424.constants.Ntag424;
+import net.bplearning.ntag424.constants.Permissions;
 import net.bplearning.ntag424.encryptionmode.AESEncryptionMode;
 import net.bplearning.ntag424.sdm.NdefTemplateMaster;
 import net.bplearning.ntag424.sdm.SDMSettings;
+import net.bplearning.ntag424.util.ByteUtil;
 
 import java.io.IOException;
 
@@ -176,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Basic publicly-viewable tag information
     public void showTagInfo(Tag tag) {
-        Log.d(LOG_TAG, "Tag ID: " + Util.byteToHex(tag.getId()));
+        Log.d(LOG_TAG, "Tag ID: " + ByteUtil.byteToHex(tag.getId()));
         Log.d(LOG_TAG, "Tag Tech: " + String.join(", ", tag.getTechList()));
     }
 
@@ -193,20 +194,20 @@ public class MainActivity extends AppCompatActivity {
         // This is the "master" key
         KeyInfo key0 = new KeyInfo();
         key0.diversifyKeys = false;
-        key0.key = Constants.FACTORY_KEY;
-        keySet.setKey(Constants.ACCESS_KEY0, key0);
+        key0.key = Ntag424.FACTORY_KEY;
+        keySet.setKey(Permissions.ACCESS_KEY0, key0);
 
         // No standard usage
         KeyInfo key1 = new KeyInfo();
         key1.diversifyKeys = false;
-        key1.key = Constants.FACTORY_KEY;
-        keySet.setKey(Constants.ACCESS_KEY1, key1);
+        key1.key = Ntag424.FACTORY_KEY;
+        keySet.setKey(Permissions.ACCESS_KEY1, key1);
 
         // Usually used as a meta read key for encrypted PICC data
         KeyInfo key2 = new KeyInfo();
         key2.diversifyKeys = false;
-        key2.key = Constants.FACTORY_KEY;
-        keySet.setKey(Constants.ACCESS_KEY2, key2);
+        key2.key = Ntag424.FACTORY_KEY;
+        keySet.setKey(Permissions.ACCESS_KEY2, key2);
 
         // Usually used as the MAC and encryption key.
         // The MAC key usually has the diversification information setup.
@@ -214,18 +215,18 @@ public class MainActivity extends AppCompatActivity {
         key3.diversifyKeys = true;
         key3.systemIdentifier = new byte[] { 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67 }; // systemIdentifier is usually a hex-encoded string.  Here, it is "testing".
         key3.version = 1; // Since it is not a factory key (it is *based* on a factory key, but underwent diversification), need to set to a version number other than 1.
-        key3.key = Constants.FACTORY_KEY;
+        key3.key = Ntag424.FACTORY_KEY;
 
         // No standard usage
-        keySet.setKey(Constants.ACCESS_KEY3, key3);
+        keySet.setKey(Permissions.ACCESS_KEY3, key3);
         KeyInfo key4 = new KeyInfo();
         key4.diversifyKeys = false;
-        key4.key = Constants.FACTORY_KEY;
-        keySet.setKey(Constants.ACCESS_KEY4, key4);
+        key4.key = Ntag424.FACTORY_KEY;
+        keySet.setKey(Permissions.ACCESS_KEY4, key4);
 
         // This is used for decoding, but documenting that key2/key3 are standard for meta and mac
-        keySet.setMetaKey(Constants.ACCESS_KEY2);
-        keySet.setMacFileKey(Constants.ACCESS_KEY3);
+        keySet.setMetaKey(Permissions.ACCESS_KEY2);
+        keySet.setMacFileKey(Permissions.ACCESS_KEY3);
 
         return keySet;
     }
@@ -247,24 +248,24 @@ public class MainActivity extends AppCompatActivity {
                 communicator.setLogger((info) -> Log.d(LOG_TAG, "Communicator: " + info));
                 communicator.beginCommunication();
 
+                // Synchronize keys first
+                KeySet keySet = getKeySet();
+                keySet.synchronizeKeys(communicator);
 
                 // Authenticate with a key.  If you are in LRP mode (Requires permanently changing tag settings), uncomment the LRP version instead.
                 // if(LRPEncryptionMode.authenticateLRP(communicator, 0, Constants.FACTORY_KEY)) {
-                if(AESEncryptionMode.authenticateEV2(communicator, 0, Constants.FACTORY_KEY)) {
+                if(AESEncryptionMode.authenticateEV2(communicator, 0, keySet.getKey(0).key)) { // Assumes key0 is non-diversified
                     Log.d(LOG_TAG, "Login successful");
                     byte[] cardUid = GetCardUid.run(communicator);
-                    Log.d(LOG_TAG, "Card UID: " + Util.byteToHex(cardUid));
+                    Log.d(LOG_TAG, "Card UID: " + ByteUtil.byteToHex(cardUid));
                     int keyVersion = GetKeyVersion.run(communicator, 0);
                     Log.d(LOG_TAG, "Key 0 version: " + keyVersion);
-
-                    KeySet keySet = getKeySet();
-                    keySet.synchronizeKeys(communicator);
 
                     // Doing this will set LRP mode for all future authentications
                     // SetCapabilities.run(communicator, true);
 
                     // Get the NDEF file settings
-                    FileSettings ndeffs = GetFileSettings.run(communicator, Constants.NDEF_FILE_NUMBER);
+                    FileSettings ndeffs = GetFileSettings.run(communicator, Ntag424.NDEF_FILE_NUMBER);
                     Log.d(LOG_TAG, "Debug NDEF: " + debugStringForFileSettings(ndeffs));
 
                     // Secret data
@@ -274,8 +275,8 @@ public class MainActivity extends AppCompatActivity {
 
                     // Set the access keys and options
                     SDMSettings sdmSettings = new SDMSettings();
-                    sdmSettings.sdmMetaReadPerm = Constants.ACCESS_KEY2;     // Set to a key to get encrypted PICC data (usually non-diversified since you don't know the UID until after decryption)
-                    sdmSettings.sdmFileReadPerm = Constants.ACCESS_KEY3;     // Used to create the MAC and Encrypt FileData
+                    sdmSettings.sdmMetaReadPerm = Permissions.ACCESS_KEY2;     // Set to a key to get encrypted PICC data (usually non-diversified since you don't know the UID until after decryption)
+                    sdmSettings.sdmFileReadPerm = Permissions.ACCESS_KEY3;     // Used to create the MAC and Encrypt FileData
                     sdmSettings.sdmOptionUid = true;
                     sdmSettings.sdmOptionReadCounter = true;
 
@@ -288,16 +289,16 @@ public class MainActivity extends AppCompatActivity {
                     // byte[] ndefRecord = master.generateNdefTemplateFromUrlString("https://sdm.nfcdeveloper.com/tagpt?uid={UID}&ctr={COUNTER}&cmac={MAC}", sdmSettings);
 
                     // Write the record to the file
-                    WriteData.run(communicator, Constants.NDEF_FILE_NUMBER, ndefRecord);
+                    WriteData.run(communicator, Ntag424.NDEF_FILE_NUMBER, ndefRecord);
 
                     // Set the general NDEF permissions
-                    ndeffs.readPerm = Constants.ACCESS_EVERYONE;
-                    ndeffs.writePerm = Constants.ACCESS_KEY0;
-                    ndeffs.readWritePerm = Constants.ACCESS_KEY3; // backup key
-                    ndeffs.changePerm = Constants.ACCESS_KEY0;
+                    ndeffs.readPerm = Permissions.ACCESS_EVERYONE;
+                    ndeffs.writePerm = Permissions.ACCESS_KEY0;
+                    ndeffs.readWritePerm = Permissions.ACCESS_KEY3; // backup key
+                    ndeffs.changePerm = Permissions.ACCESS_KEY0;
                     ndeffs.sdmSettings = sdmSettings; // Use the SDM settings we just setup
                     Log.d(LOG_TAG, "New Ndef Settings: " + debugStringForFileSettings(ndeffs));
-                    ChangeFileSettings.run(communicator, Constants.NDEF_FILE_NUMBER, ndeffs);
+                    ChangeFileSettings.run(communicator, Ntag424.NDEF_FILE_NUMBER, ndeffs);
 
                     runOnUiThread(() -> {
                         Toast.makeText(this, "Tag Sync Successful", Toast.LENGTH_SHORT).show();
