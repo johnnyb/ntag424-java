@@ -17,8 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.CRC32;
 
-public class Crypto {
-    public final static byte[] padMessageToBlocksize(byte[] message, int blocksize) {
+public final class Crypto {
+    public static byte[] padMessageToBlocksize(byte[] message, int blocksize) {
         int remainder = message.length % blocksize;
         int complete_blocks = message.length / blocksize;
         if(remainder == 0) {

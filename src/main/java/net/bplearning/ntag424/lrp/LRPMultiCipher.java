@@ -7,6 +7,17 @@ import net.bplearning.ntag424.util.Crypto;
  * NXP's document AN12304.  First, generate a
  * MultiCipher, which then contains individual
  * ciphers for different uses.
+ *
+ * Note that one parameter for LRP is "m", which is both
+ * (a) the size of pieces (in bits) that the counter is
+ * broken into, and (b) the number of plaintexts (2^m)
+ * that is generated.  However, this implementation just
+ * uses the parameter m = 4, both because that is
+ * what NXP uses, and it simplifies the implementation,
+ * since m = 4 is a half-byte.  Theoretically, though,
+ * I think you can have m be whatever size you want in
+ * theory (though it needs to be 4 to work with the LRP
+ * algorithm in the NXP chip).
  */
 public class LRPMultiCipher {
 	byte[] key;

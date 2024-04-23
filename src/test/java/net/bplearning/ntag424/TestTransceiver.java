@@ -1,5 +1,7 @@
 package net.bplearning.ntag424;
 
+import net.bplearning.ntag424.util.ThrowableFunction;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,7 +11,7 @@ import java.util.List;
  * as a transceiver to record communication
  * I/O 
  */
-public class TestTransceiver implements DnaCommunicator.ThrowableFunction<byte[], byte[], IOException> {
+public class TestTransceiver implements ThrowableFunction<byte[], byte[], IOException> {
 	public List<byte[]> responses = new LinkedList<>();
 	public int lastResponseIndex = -1;
 	public List<byte[]> recordedRequests = new LinkedList<>();

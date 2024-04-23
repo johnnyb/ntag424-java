@@ -244,3 +244,11 @@ Note, however, that your diversified key SHOULD NOT be just a diversification of
 It should be based on a *separate* master key.
 Otherwise, if someone were to decode one of your tags, obtaining the key would give them all the information they needed to generate and fake diversified keys.
 Keeping the master key for your diversified keys secret is an absolute imperative for the system to work.
+
+## Generating Keys
+
+An easy way to generate a key is with the following command:
+
+```
+head -c 16 /dev/random|xxd -p
+```

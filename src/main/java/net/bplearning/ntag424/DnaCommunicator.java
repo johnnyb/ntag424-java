@@ -11,12 +11,9 @@ import net.bplearning.ntag424.exception.MACValidationException;
 import net.bplearning.ntag424.exception.ProtocolException;
 import net.bplearning.ntag424.util.ByteUtil;
 import net.bplearning.ntag424.util.Crypto;
+import net.bplearning.ntag424.util.ThrowableFunction;
 
 public class DnaCommunicator {
-	public interface ThrowableFunction <T, R, E extends Throwable> {
-		public R apply(T input) throws E;
-	}
-
 	protected ThrowableFunction<byte[], byte[], IOException> transceiver;
 	protected EncryptionMode encryptionMode;
 	protected byte[] activeTransactionIdentifier;
