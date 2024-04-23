@@ -9,6 +9,7 @@ import net.bplearning.ntag424.command.ChangeKey;
 import net.bplearning.ntag424.command.GetCardUid;
 import net.bplearning.ntag424.command.GetKeyVersion;
 import net.bplearning.ntag424.constants.Ntag424;
+import net.bplearning.ntag424.constants.Permissions;
 import net.bplearning.ntag424.exception.ProtocolException;
 import net.bplearning.ntag424.sdm.PiccData;
 import net.bplearning.ntag424.util.ByteUtil;
@@ -86,7 +87,7 @@ public class KeyInfo {
 
 		byte[] cardKey = generateKeyForCardUid(cardUid);
 
-		if(keyNum == 0) {
+		if(keyNum == Permissions.ACCESS_KEY0) {
 			// Key 0 doesn't need an old key - just set the new key
 			ChangeKey.run(comm, keyNum, null, cardKey, version);
 		} else {

@@ -3,7 +3,10 @@ package net.bplearning.ntag424.card;
 import java.io.IOException;
 
 import net.bplearning.ntag424.DnaCommunicator;
+import net.bplearning.ntag424.command.GetKeyVersion;
 import net.bplearning.ntag424.constants.Permissions;
+import net.bplearning.ntag424.encryptionmode.AESEncryptionMode;
+import net.bplearning.ntag424.encryptionmode.LRPEncryptionMode;
 import net.bplearning.ntag424.sdm.PiccData;
 import net.bplearning.ntag424.util.ByteUtil;
 
@@ -27,10 +30,35 @@ public class KeySet {
 	 * This is a helper function to synchronize all of the
 	 * keys on a card to their current version.  Should be performed
 	 * when logged out.  User should relogin after this completes.
+	 * Assumes that key version 0 is the factory key.
+	 * Also, current implementation can't sync if key0 is a diversified key.
 	 */
 	public boolean synchronizeKeys(DnaCommunicator comm) throws IOException {
 		boolean wasSuccessful = true;
-		for(int i = 0; i < keys.length; i++) {
+		int appKeyVersion = GetKeyVersion.run(comm, Permissions.ACCESS_KEY0);
+		KeyInfo existingAppKeyInfo = keys[0].getKeyInfoForVersion(appKeyVersion);
+		if(existingAppKeyInfo == null) {
+			// Don't know this app key
+			return false;
+		}
+
+		if(existingAppKeyInfo.diversifyKeys) {
+			// Can't sync if the app key is diversified.  This is theoretically possible but only if RandomId is not active.
+			return false;
+		}
+
+		if(usesLrp) {
+			if(!LRPEncryptionMode.authenticateLRP(comm, Permissions.ACCESS_KEY0, existingAppKeyInfo.key)) {
+				return false;
+			}
+		} else {
+			if(!AESEncryptionMode.authenticateEV2(comm, Permissions.ACCESS_KEY0, existingAppKeyInfo.key)) {
+				return false;
+			}
+		}
+
+		// Have to count down because we will have to relogin after changing key 0.
+		for(int i = Permissions.ACCESS_KEY4; i >= Permissions.ACCESS_KEY0; i--) {
 			if(!keys[i].synchronizeKey(comm, i)) {
 				wasSuccessful = false;
 			}
