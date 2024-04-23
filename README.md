@@ -1,5 +1,9 @@
 # NXP NTAG 424 DNA Library
 
+NOTE - I consider the 1.0.X series to be "still in development" and breaking changes can occur at any time.
+1.1.0 will be the first "stable" release.
+This is due to a combination of factors, mostly centered around my inexperience with Java packaging and trying to get something to "just work".
+
 This library is meant to help with handling the NXP NTAG 424 DNA chip.
 Note that the library itself is completely hardware agnostic, and requires adding in a "transceiver" to manage the NFC hardware details.
 See more about that in the Usage section.
