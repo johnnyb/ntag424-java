@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
             Intent launchIntent = new Intent(this.getApplicationContext(), MainActivity.class);
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, launchIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, launchIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_MUTABLE);
             adapter.enableForegroundDispatch(this, pendingIntent, null, null);
         }
     }
