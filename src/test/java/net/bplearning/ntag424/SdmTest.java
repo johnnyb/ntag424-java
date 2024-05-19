@@ -3,6 +3,11 @@ package net.bplearning.ntag424;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
+import javax.rmi.CORBA.Util;
+
 import net.bplearning.ntag424.constants.Ntag424;
 import net.bplearning.ntag424.util.ByteUtil;
 import org.junit.Test;
@@ -150,5 +155,26 @@ public class SdmTest {
 		byte[] expectedDecryptedData = new byte[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 		assertArrayEquals(expectedDecryptedData, decryptedData);
 		assertArrayEquals(expectedMac, piccData.performShortCMAC(contentForMac));
+	}
+
+	@Test
+	public void testFileDecryptionAes() {
+		String scannedValue = "https://sdm.nfcdeveloper.com/tag?picc_data=4E8D0223F8C17CDCCE5BC24076CFAA0D&enc=B56FED7FF7B23791C0684F17E117C97450723BB5C104E809C8929F0264CB99F9969D07FC32BB2D11995AEF826E355097&cmac=5FD76DE4BD942DFC";
+		int encOffset = 80;
+		int piccOffset = 43;
+		int macOffset = 182;
+		String piccSubstring = scannedValue.substring(piccOffset, piccOffset + 32);
+		PiccData decryptedPiccData = PiccData.decodeFromEncryptedBytes(ByteUtil.hexToByte(piccSubstring), Ntag424.FACTORY_KEY, false);
+		decryptedPiccData.setMacFileKey(Ntag424.FACTORY_KEY);
+
+		assertEquals("049F50824F1390", decryptedPiccData.getUidString());
+		assertEquals(16, decryptedPiccData.getReadCounter());
+		byte[] decryptedBytes = decryptedPiccData.decryptFileData(ByteUtil.hexToByte(scannedValue.substring(encOffset, encOffset + 96)));
+		String decryptedValue = new String(decryptedBytes, StandardCharsets.UTF_8);
+		assertEquals("19.05.2024 12:22:33#1234************************", decryptedValue);
+
+		String valueToMac = scannedValue.substring(encOffset, macOffset);
+		byte[] mac = decryptedPiccData.performShortCMAC(valueToMac.getBytes(StandardCharsets.UTF_8));
+		assertEquals("5FD76DE4BD942DFC", ByteUtil.byteToHex(mac));
 	}
 }

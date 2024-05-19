@@ -184,19 +184,19 @@ public class PiccData {
 	}
 
 	protected CMAC generateAESCMAC(byte[] key) {
-            try {
-				SecretKeySpec keySpec = new SecretKeySpec(generateAESSessionMacKey(key), "AES");
+		try {
+			SecretKeySpec keySpec = new SecretKeySpec(generateAESSessionMacKey(key), "AES");
 
-				Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+			Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
 
-				cipher.init(Cipher.ENCRYPT_MODE, keySpec, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
-				AESCMAC mac = new AESCMAC(cipher, keySpec);
-				return mac;
-			} catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException e) {
-				e.printStackTrace();
-				return null;
-			}
+			cipher.init(Cipher.ENCRYPT_MODE, keySpec, net.bplearning.ntag424.constants.Crypto.zeroIVPS);
+			AESCMAC mac = new AESCMAC(cipher, keySpec);
+			return mac;
+		} catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException e) {
+			e.printStackTrace();
+			return null;
 		}
+	}
 
 	public byte[] performCMAC(byte[] message) {
 		CMAC cmac = usesLrp ? generateLRPCMAC(macFileKey) : generateAESCMAC(macFileKey);
@@ -204,10 +204,12 @@ public class PiccData {
 		return result;
 	}
 
+	/** Performs the CMAC algorithm and shortens the response. */
 	public byte[] performShortCMAC(byte[] message) {
 		return Crypto.shortenCMAC(performCMAC(message));
 	};
 
+	/** Sets the encryption key used for both file encryption and MAC calculation */
 	public void setMacFileKey(byte[] key) {
 		macFileKey = key;
 	}
