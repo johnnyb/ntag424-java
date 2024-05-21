@@ -175,13 +175,14 @@ public class FileSettings {
 				  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmMacOffset, 0));
 				  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmMacOffset, 1));
 				  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmMacOffset, 2));
-  
-				  if(settings.sdmSettings.sdmOptionReadCounterLimit) {
-					  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmReadCounterLimit, 0));
-					  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmReadCounterLimit, 1));
-					  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmReadCounterLimit, 2));
-				  }
+ 			  }
+
+			  if(settings.sdmSettings.sdmOptionReadCounterLimit) {
+				  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmReadCounterLimit, 0));
+				  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmReadCounterLimit, 1));
+				  data.add(ByteUtil.getByteLSB(settings.sdmSettings.sdmReadCounterLimit, 2));
 			  }
+
 		  }
 		  
 		  byte[] dataArray = new byte[data.size()];
