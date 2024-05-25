@@ -180,6 +180,12 @@ return newData;
     public static final byte[] DIVERSITY_CONSTANT_192_2 = { 0x12 };
     public static final byte[] DIVERSITY_CONSTANT_256_1 = { 0x41 };
     public static final byte[] DIVERSITY_CONSTANT_256_2 = { 0x42 };
+
+    /** 
+     * Diversifies keys according to the AES standards in AN10922 for 128, 196, and 256 bit keys.
+     * A wrong-sized key will throw and IllegalArgumentException.
+     * The diversificationData should *not* include the diversity constant, but should include everything else (uid, application id, and system identifier).
+     */
     public static byte[] diversifyKey(byte[] masterKey, byte[] diversificationData) {
 		// NOTE - we are not including the padblock because the CMAC function already does it
 
