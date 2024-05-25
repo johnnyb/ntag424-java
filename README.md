@@ -233,10 +233,11 @@ Note that there is also an "application identifier" available.
 I am not clear what that is supposed to be, but the document this is based on (AN10922) uses the "3-byte DESfire AID" (0x3042F5) in its example, so that is the default here.
 
 ```
-byte[] masterKey = new byte[]{ /* ... */ };
+byte[] masterKey = new byte[]{ /* Your master key here */ };
 KeyInfo keyInfo = new KeyInfo();
 keyInfo.key = masterKey;
 keyInfo.systemIdentifier = new byte[] {0x66, 0x6f, 0x6f};
+keyInfo.diversifyKeys = true; 
 byte[] cardKey = keyInfo.generateKeyForCardUid(uidBytes);
 ```
 
