@@ -174,6 +174,10 @@ public class NdefTemplateMaster {
 			sdmSettings.sdmOptionEncryptFileData = true;
 			sdmSettings.sdmEncOffset = fileDataOffset;
 			sdmSettings.sdmEncLength = fileDataLength * getAsciiMultiplier(sdmSettings);
+
+			// According to pg. 69, if the file encryption is turned on, then the UID and Read Counter must be enabled as well.
+			sdmSettings.sdmOptionReadCounter = true;
+			sdmSettings.sdmOptionUid = true;
 		}
 		if(macInputOffset == null) {
 			if(sdmSettings.sdmOptionEncryptFileData) {
