@@ -159,6 +159,11 @@ public class DnaCommunicator {
 	 * @throws ProtocolException
 	 */
 	public CommandResult nxpMacCommand(byte cmd, byte[] hdr, byte[] data) throws IOException, ProtocolException {
+		if(!isLoggedIn()) {
+			// Section 8.2.3.5 - if no active session send plain
+			return nxpPlainCommand(cmd, hdr, data);
+		}
+
         // PREPARE MAC DATA
 		byte[] cipherBase = new byte[] {
             cmd,
@@ -217,6 +222,11 @@ public class DnaCommunicator {
 	 * @throws ProtocolException
 	 */
 	public CommandResult nxpEncryptedCommand(byte cmd, byte[] hdr, byte[] data) throws IOException {
+		if(!isLoggedIn()) {
+			// Section 8.2.3.5 - if no active session send plain
+			return nxpPlainCommand(cmd, hdr, data);
+		}
+
 		byte[] encryptedData;
 		if(data == null || data.length == 0) {
 			encryptedData = data;
