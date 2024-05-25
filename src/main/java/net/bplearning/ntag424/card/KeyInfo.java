@@ -32,9 +32,6 @@ public class KeyInfo {
 	/** Used for key diversification. You can set this to whatever you want. */
 	public byte[] systemIdentifier = new byte[]{};
 
-	/** Used for key diversification. The standard says not to change this. */
-	public byte[] diversityConstant = new byte[] { 0x01 };
-
 	/** A list of old keys that have been used.  Used for synchronizing to a new key set. */
 	public List<KeyInfo> oldKeys = new LinkedList<>();
 
@@ -57,9 +54,7 @@ public class KeyInfo {
 			return key;
 		}
 
-		// NOTE - we are not including the padblock because the CMAC function already does it
-		byte[] diversificationData = ByteUtil.combineByteArrays(diversityConstant, uidBytes, applicationId, systemIdentifier);
-		return Crypto.simpleAesCmac(key, diversificationData);
+		return Crypto.diversifyKey(key, ByteUtil.combineByteArrays(uidBytes, applicationId, systemIdentifier));
 	}
 
 	/** This is a utility function to go through each old 

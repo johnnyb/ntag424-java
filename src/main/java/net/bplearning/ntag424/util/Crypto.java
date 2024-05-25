@@ -174,4 +174,38 @@ return newData;
         }
         return blocks * multiple;
     }
+
+    public static final byte[] DIVERSITY_CONSTANT_128 = { 0x01 };
+    public static final byte[] DIVERSITY_CONSTANT_192_1 = { 0x11 };
+    public static final byte[] DIVERSITY_CONSTANT_192_2 = { 0x12 };
+    public static final byte[] DIVERSITY_CONSTANT_256_1 = { 0x41 };
+    public static final byte[] DIVERSITY_CONSTANT_256_2 = { 0x42 };
+    public static byte[] diversifyKey(byte[] masterKey, byte[] diversificationData) {
+		// NOTE - we are not including the padblock because the CMAC function already does it
+
+        switch(masterKey.length) {
+            case 16:
+                return Crypto.simpleAesCmac(masterKey, ByteUtil.combineByteArrays(DIVERSITY_CONSTANT_128, diversificationData));
+
+            case 24:
+                byte[] a = Crypto.simpleAesCmac(masterKey, ByteUtil.combineByteArrays(DIVERSITY_CONSTANT_192_1, diversificationData));
+                byte[] b = Crypto.simpleAesCmac(masterKey, ByteUtil.combineByteArrays(DIVERSITY_CONSTANT_192_2, diversificationData));
+                return ByteUtil.combineByteArrays(
+                    ByteUtil.subArrayOf(a, 0, 8),
+                    ByteUtil.xor(
+                        ByteUtil.subArrayOf(a, 8, 8),
+                        ByteUtil.subArrayOf(b, 0, 8)
+                    ),
+                    ByteUtil.subArrayOf(b, 8, 8)
+                );
+            case 32:
+                return ByteUtil.combineByteArrays(
+                    Crypto.simpleAesCmac(masterKey, ByteUtil.combineByteArrays(DIVERSITY_CONSTANT_256_1, diversificationData)),
+                    Crypto.simpleAesCmac(masterKey, ByteUtil.combineByteArrays(DIVERSITY_CONSTANT_256_2, diversificationData))
+                );
+
+            default:
+                throw new IllegalArgumentException("Key must be 16, 24, or 32 bytes long");
+        }
+    }
 }
