@@ -21,6 +21,8 @@ public class DnaCommunicator {
 	protected int commandCounter;
 	protected Consumer<String> logger = (val) -> {}; // Default to an empty logger
 
+	protected CommandResult lastCommandResult = null; // Result of the previous command
+
 	public void log(String value) {
 		logger.accept(value);
 	}
@@ -93,6 +95,9 @@ public class DnaCommunicator {
 
 	public static byte LENGTH_ALL = 0x00;
 
+	/** Returns the result of the latest command.  Note that this is primarily for retrieving the status bytes, as the data may be encrypted. */
+	public CommandResult getLastCommandResult() { return lastCommandResult; }
+
 	/**
 	 * Runs a standard ISO/IEC7816-4 communication frame
 	 * @param instructionClass
@@ -121,7 +126,8 @@ public class DnaCommunicator {
 
 		byte[] results = transceive(command);
 
-		return new CommandResult(results);
+		lastCommandResult = new CommandResult(results);
+		return lastCommandResult;
 	}
 
 	/**
