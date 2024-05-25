@@ -3,10 +3,7 @@ package net.bplearning.ntag424;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-
-import javax.rmi.CORBA.Util;
 
 import net.bplearning.ntag424.constants.Ntag424;
 import net.bplearning.ntag424.util.ByteUtil;
