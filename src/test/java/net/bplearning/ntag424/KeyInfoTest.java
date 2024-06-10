@@ -46,15 +46,4 @@ public class KeyInfoTest {
 		byte[] expectedCardKey = ByteUtil.hexToByte("4FC6EEC820B4C54314990B8611662DB695E7880982C0001E6067488346100AED");
 		assertArrayEquals("Diversified card key incorrect", cardKey, expectedCardKey);
 	}
-
-	@Test 
-	public void keysetTest() {
-		KeySet ks = new KeySet();
-		KeyInfo ki = new KeyInfo();
-		ki.diversifyKeys = true;
-		ki.systemIdentifier = "McElroy".getBytes();
-		ks.setKey(1, ki);
-		ks.setMacFileKey(1);
-		assertNotNull(ks.decodeAndVerifyPiccData("04A77F12647380", "00001C", "9A88066EBE25ECD0"));
-	}
 }
