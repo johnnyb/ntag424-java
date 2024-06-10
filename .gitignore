@@ -2,3 +2,6 @@ target
 .vscode
 *.diff
 .idea
+
+# This is a personal directory which I have external documentation stored in
+externalDocs
