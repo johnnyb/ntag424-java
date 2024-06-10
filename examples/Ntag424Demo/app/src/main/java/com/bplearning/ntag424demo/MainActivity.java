@@ -42,6 +42,7 @@ import net.bplearning.ntag424.sdm.SDMSettings;
 import net.bplearning.ntag424.util.ByteUtil;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends AppCompatActivity {
     public static final String LOG_TAG = "NfcApp";
@@ -213,8 +214,8 @@ public class MainActivity extends AppCompatActivity {
         // The MAC key usually has the diversification information setup.
         KeyInfo key3 = new KeyInfo();
         key3.diversifyKeys = true;
-        key3.systemIdentifier = new byte[] { 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67 }; // systemIdentifier is usually a hex-encoded string.  Here, it is "testing".
-        key3.version = 1; // Since it is not a factory key (it is *based* on a factory key, but underwent diversification), need to set to a version number other than 1.
+        key3.systemIdentifier = "testing".getBytes(StandardCharsets.UTF_8); // systemIdentifier is usually a hex-encoded string based on the name of your intended use.
+        key3.version = 1; // Since it is not a factory key (it is *based* on a factory key, but underwent diversification), need to set to a version number other than 0.
         key3.key = Ntag424.FACTORY_KEY;
 
         // No standard usage
