@@ -62,6 +62,7 @@ public class KeyInfo {
 	 * This assumes that the LRP status has not changed.
 	 * Must be logged in.
 	 * Throws an exception if there is a problem changing keys.
+	 * Additionally, it assumes each key has a specific version, with the factory key being version 0.
 	 */
 	public boolean synchronizeKey(byte[] cardUid, DnaCommunicator comm, int keyNum) throws IOException {
 		int existingVersion = GetKeyVersion.run(comm, keyNum);
